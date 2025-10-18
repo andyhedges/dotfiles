@@ -29,9 +29,6 @@ colors
 zstyle ':vcs_info:git:*' formats '%F{yellow} %b%f'
 zstyle ':vcs_info:*' enable git
 
-# Ensure it's updated before every prompt
-precmd() { vcs_info }
-
 # Prompt and completion styling can follow:
 # PROMPT (left side)
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
