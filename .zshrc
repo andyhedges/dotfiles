@@ -44,7 +44,7 @@ _prompt_precmd() {
   if (( ${+__timer} )); then
     local -F elapsed=$(( EPOCHREALTIME - __timer ))
     if (( elapsed > 2 )); then
-      ELAPSEDSTR="%F{240}${elapsed%.}s%f.2"
+      ELAPSEDSTR="%F{240}${elapsed%.}s%.2f"
     fi
     unset __timer
   fi
