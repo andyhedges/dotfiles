@@ -15,20 +15,16 @@ promptinit
 colors
 
 # Time source for EPOCHREALTIME
-zmodload zsh/datetime
+zmodload zsh/datetime || true
 
 # Configure vcs_info for git
 zstyle ':vcs_info:git:*' formats '%F{yellow} %b%f'
 zstyle ':vcs_info:*' enable git
 
 # --- Hooks ---------------------------------------------------------------
-# record start time before each command
-_timer_preexec() {
-  __timer=$EPOCHREALTIME
-}
-add-zsh-hook preexec _timer_preexec
+# define the functions once
+_timer_preexec() { __timer=$EPOCHREALTIME }
 
-# build RPROMPT right before drawing the prompt
 _prompt_precmd() {
   vcs_info
 
@@ -43,20 +39,20 @@ _prompt_precmd() {
   # elapsed fragment: only if last command took >2s
   local ELAPSEDSTR=""
   if [[ -n $__timer ]]; then
-    # arithmetic supports floats; ensure module is loaded (zmodload above)
     local elapsed=$(( EPOCHREALTIME - __timer ))
     if (( elapsed > 2 )); then
-      # format to 1 decimal, e.g. 3.8s
       ELAPSEDSTR="%F{240}$(printf '%.1fs' "$elapsed")%f"
     fi
   fi
 
-  # rebuild RPROMPT cleanly each time so nothing gets “stuck”
   RPROMPT="%(?..%F{red}✗ %?%f )${vcs_info_msg_0_:+$vcs_info_msg_0_ }${JOBSTR:+ $JOBSTR}${ELAPSEDSTR:+ $ELAPSEDSTR}"
 }
-add-zsh-hook precmd _prompt_precmd
-# ------------------------------------------------------------------------
 
+# add hooks ONLY if not already present
+typeset -ag preexec_functions precmd_functions
+[[ -z ${preexec_functions[(r)_timer_preexec]} ]] && add-zsh-hook preexec _timer_preexec || true
+[[ -z ${precmd_functions[(r)_prompt_precmd]}  ]] && add-zsh-hook precmd  _prompt_precmd  || true
+# ------------------------------------------------------------------------
 # PROMPT (left side)
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
 %(?.%F{240}➜%f.%F{red}✗%f) '
