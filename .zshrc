@@ -42,13 +42,12 @@ _prompt_precmd() {
 
   # elapsed fragment: only if last command took >2s
   local ELAPSEDSTR=""
-  if [[ -n $__timer ]]; then
-    # arithmetic supports floats; ensure module is loaded (zmodload above)
-    local elapsed=$(( EPOCHREALTIME - __timer ))
+  if (( ${+__timer} )); then               # test "is set" without expanding it
+    local -F elapsed=$(( EPOCHREALTIME - __timer ))
     if (( elapsed > 2 )); then
-      # format to 1 decimal, e.g. 3.8s
-      ELAPSEDSTR="%F{240}$(printf '%.1fs' "$elapsed")%f"
+      RPROMPT="$RPROMPT %F{240}${elapsed%.}s%f"
     fi
+    unset __timer                          # clear so next prompt doesn't reuse
   fi
 
   # rebuild RPROMPT cleanly each time so nothing gets “stuck”
