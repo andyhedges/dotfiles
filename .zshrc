@@ -6,6 +6,11 @@ if [ -d "$HOME/.dotfiles/.git" ]; then
   fi
 fi
 
+# --- Initialize completion and prompt systems ---
+autoload -Uz compinit promptinit
+compinit
+promptinit
+
 # Source aliases and functions
 [ -f ~/.dotfiles/.aliases ] && source ~/.dotfiles/.aliases
 [ -f ~/.dotfiles/.functions ] && source ~/.dotfiles/.functions
