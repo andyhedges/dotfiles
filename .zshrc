@@ -11,6 +11,10 @@ autoload -Uz compinit promptinit
 compinit
 promptinit
 
+# Prompt and completion styling can follow:
+PROMPT='%F{cyan}%n@%m%f:%F{blue}%~%f %# '
+zstyle ':completion:*' menu select
+
 # Source aliases and functions
 [ -f ~/.dotfiles/.aliases ] && source ~/.dotfiles/.aliases
 [ -f ~/.dotfiles/.functions ] && source ~/.dotfiles/.functions
