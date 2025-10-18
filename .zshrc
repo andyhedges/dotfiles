@@ -1,4 +1,4 @@
-# Auto-update dotfiles occasionally (every 7 days)
+# --- Auto-update dotfiles occasionally (every 7 days) ---------------------
 if [ -d "$HOME/.dotfiles/.git" ]; then
   if find "$HOME/.dotfiles/.git" -mtime +7 -print -quit | grep -q .; then
     echo "Updating dotfiles..."
@@ -6,29 +6,28 @@ if [ -d "$HOME/.dotfiles/.git" ]; then
   fi
 fi
 
+# --- Basic setup ----------------------------------------------------------
 setopt prompt_subst          # allow ${...} in PROMPT/RPROMPT to expand
 
-# --- Initialize completion and prompt systems ---
 autoload -Uz compinit promptinit colors vcs_info add-zsh-hook
 compinit
 promptinit
 colors
 
-# Time source for EPOCHREALTIME
-zmodload zsh/datetime || true
+zmodload zsh/datetime || true   # ensure EPOCHREALTIME works
 
-# Configure vcs_info for git
+# --- vcs_info (git branch display) ---------------------------------------
 zstyle ':vcs_info:git:*' formats '%F{yellow} %b%f'
 zstyle ':vcs_info:*' enable git
 
 # --- Hooks ---------------------------------------------------------------
-# record start time before each command
+# Record start time before each command
 _timer_preexec() {
-  __timer=$EPOCHREALTIME
+  typeset -gF __timer=$EPOCHREALTIME
 }
 add-zsh-hook preexec _timer_preexec
 
-# build RPROMPT right before drawing the prompt
+# Build RPROMPT just before drawing the prompt
 _prompt_precmd() {
   vcs_info
 
@@ -42,33 +41,30 @@ _prompt_precmd() {
 
   # elapsed fragment: only if last command took >2s
   local ELAPSEDSTR=""
-  if (( ${+__timer} )); then               # test "is set" without expanding it
+  if (( ${+__timer} )); then
     local -F elapsed=$(( EPOCHREALTIME - __timer ))
     if (( elapsed > 2 )); then
-      RPROMPT="$RPROMPT %F{240}${elapsed%.}s%f"
+      ELAPSEDSTR="%F{240}${elapsed%.}s%f"
     fi
-    unset __timer                          # clear so next prompt doesn't reuse
+    unset __timer
   fi
 
-  # rebuild RPROMPT cleanly each time so nothing gets “stuck”
+  # compose once so nothing gets stuck or duplicated
   RPROMPT="%(?..%F{red}✗ %?%f )${vcs_info_msg_0_:+$vcs_info_msg_0_ }${JOBSTR:+ $JOBSTR}${ELAPSEDSTR:+ $ELAPSEDSTR}"
 }
 add-zsh-hook precmd _prompt_precmd
-# ------------------------------------------------------------------------
 
-# PROMPT (left side)
+# --- Prompt (left side) ---------------------------------------------------
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
 %(?.%F{240}➜%f.%F{red}✗%f) '
 
-# completion styling
+# --- Completion and colors ------------------------------------------------
 zstyle ':completion:*' menu select
-[[ -n ${LS_COLORS-} ]] && zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+[[ -n ${LS_COLORS-} ]] && zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} || true
 
-# Source aliases and functions
+# --- Aliases and functions -----------------------------------------------
 [[ -r "$HOME/.dotfiles/.aliases"   ]] && source "$HOME/.dotfiles/.aliases"
 [[ -r "$HOME/.dotfiles/.functions" ]] && source "$HOME/.dotfiles/.functions"
 
-# Allow user-specific overrides
-if [[ -r "$HOME/.zshrc.local" ]]; then
-  source "$HOME/.zshrc.local"
-fi
+# --- Optional per-host overrides -----------------------------------------
+[[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local" || true
