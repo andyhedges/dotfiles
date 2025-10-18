@@ -13,3 +13,8 @@ dotupdate() {
     echo "  git clone https://github.com/<yourname>/dotfiles.git \"$repo\""
   fi
 }
+
+dotrefresh() {
+  dotupdate
+  exec zsh
+}
