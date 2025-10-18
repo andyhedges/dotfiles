@@ -1,3 +1,14 @@
+precmd() {
+  vcs_info
+  if (( $#jobstates == 1 )); then
+    JOBSTR="%F{240}job:1%f"
+  elif (( $#jobstates > 1 )); then
+    JOBSTR="%F{240}jobs:$#jobstates%f"
+  else
+    JOBSTR=""
+  fi
+}
+
 # Auto-update dotfiles occasionally (every 7 days)
 if [ -d "$HOME/.dotfiles/.git" ]; then
   if find "$HOME/.dotfiles/.git" -mtime +7 | grep -q .; then
@@ -26,7 +37,7 @@ precmd() { vcs_info }
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
 %(?.%F{240}➜%f.%F{red}✗%f) '
 # RPROMPT (right side)
-RPROMPT='%(?..%F{red}✗ %?%f )${vcs_info_msg_0_:+$vcs_info_msg_0_ }${${j:#0}:+%F{240}$(( j == 1 ? "job" : "jobs" )):$j%f}'
+RPROMPT='%(?..%F{red}✗ %?%f )${vcs_info_msg_0_:+$vcs_info_msg_0_ }${JOBSTR}'
 
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} # colorize completion listings
