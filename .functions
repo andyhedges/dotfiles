@@ -3,18 +3,25 @@
 dotupdate() {
   local repo="$HOME/.dotfiles"
 
-  if [ -d "$repo/.git" ]; then
-    echo "Updating dotfiles..."
-    git -C "$repo" pull --quiet --ff-only &&
-      echo "Dotfiles up to date."
+  if [ ! -d "$repo/.git" ]; then
+    printf '%s\n' "No dotfiles repo at $repo" \
+                  "Clone it with:" \
+                  "  git clone https://github.com/<yourname>/dotfiles.git \"$repo\""
+    return 2
+  fi
+
+  printf '%s\n' "Updating dotfiles..."
+  if git -C "$repo" pull --quiet --ff-only; then
+    printf '%s\n' "Dotfiles up to date."
+    return 0
   else
-    echo "No dotfiles repo found at $repo"
-    echo "Clone it with:"
-    echo "  git clone https://github.com/<yourname>/dotfiles.git \"$repo\""
+    # Non-fast-forward or network error. Report but don’t poison the next prompt.
+    printf '%s\n' "Update failed. Resolve manually: cd \"$repo\" && git status"
+    return 1
   fi
 }
 
 dotrefresh() {
-  dotupdate
-  exec zsh
+  dotupdate || true    # do not leak a non-zero into the new shell
+  exec zsh -l          # start a fresh login shell
 }
