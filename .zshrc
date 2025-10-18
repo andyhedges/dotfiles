@@ -18,11 +18,12 @@ colors
 zstyle ':vcs_info:git:*' formats '%F{yellow} %b%f'
 zstyle ':vcs_info:*' enable git
 
-# Record start time before each command
-preexec() { __timer=$EPOCHREALTIME }
+# record start time before each command
+_timer_preexec() { __timer=$EPOCHREALTIME }
+preexec_functions=(${preexec_functions[@]} _timer_preexec)
 
-# Build dynamic right prompt before each prompt
-precmd() {
+# build RPROMPT right before drawing the prompt, run this LAST
+_prompt_precmd() {
   vcs_info
 
   # jobs fragment: nothing | "job:1" | "jobs:N"
@@ -39,15 +40,15 @@ precmd() {
   if [[ -n $__timer ]]; then
     local elapsed=$(( EPOCHREALTIME - __timer ))
     if (( elapsed > 2 )); then
-      # format to 1 decimal place, e.g. 3.8s
       local pretty; pretty=$(printf '%.1fs' "$elapsed")
       ELAPSEDSTR="%F{240}${pretty}%f"
     fi
   fi
 
-  # rebuild RPROMPT cleanly each time
   RPROMPT="%(?..%F{red}✗ %?%f )${vcs_info_msg_0_:+$vcs_info_msg_0_ }${JOBSTR:+ $JOBSTR}${ELAPSEDSTR:+ $ELAPSEDSTR}"
 }
+precmd_functions=(${precmd_functions[@]} _prompt_precmd)
+
 
 # PROMPT (left side)
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
