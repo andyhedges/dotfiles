@@ -3,7 +3,7 @@ dotupdate() {
   local repo="$HOME/.dotfiles"
   if [[ ! -d "$repo/.git" ]]; then
     printf '%s\n' "No dotfiles repo at $repo" "Clone it with:" \
-      "  git clone https://github.com/<yourname>/dotfiles.git \"$repo\""
+      "  git clone https://github.com/andyhedges/dotfiles.git \"$repo\""
     return 2
   fi
   printf '%s\n' "Updating dotfiles..."
