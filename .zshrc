@@ -14,6 +14,8 @@ promptinit
 # Prompt and completion styling can follow:
 PROMPT='%F{cyan}%n@%m%f:%F{blue}%~%f %# '
 zstyle ':completion:*' menu select
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} # colorize completion listings
+
 
 # Source aliases and functions
 [ -f ~/.dotfiles/.aliases ] && source ~/.dotfiles/.aliases
