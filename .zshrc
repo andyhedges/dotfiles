@@ -6,6 +6,8 @@ if [ -d "$HOME/.dotfiles/.git" ]; then
   fi
 fi
 
+LC_CTYPE="en_US.UTF-8"
+
 # --- Basic setup ----------------------------------------------------------
 setopt prompt_subst          # allow ${...} in PROMPT/RPROMPT to expand
 
