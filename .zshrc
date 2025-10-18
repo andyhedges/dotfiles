@@ -1,11 +1,3 @@
-# Auto-update dotfiles occasionally (every 7 days)
-if [ -d "$HOME/.dotfiles/.git" ]; then
-  if find "$HOME/.dotfiles/.git" -mtime +7 | grep -q .; then
-    echo "Updating dotfiles..."
-    git -C "$HOME/.dotfiles" pull --quiet --ff-only &
-  fi
-fi
-
 # --- Initialize completion and prompt systems ---
 autoload -Uz compinit promptinit
 compinit
