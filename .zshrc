@@ -9,3 +9,9 @@ fi
 # Source aliases and functions
 [ -f ~/.dotfiles/.aliases ] && source ~/.dotfiles/.aliases
 [ -f ~/.dotfiles/.functions ] && source ~/.dotfiles/.functions
+
+# Allow user-specific overrides: 
+# For example, if your dotfiles are synced across machines, .zshrc.local can
+# hold different PATH entries, environment variables, or API keys without
+# committing them.
+[ -f ~/.zshrc.local ] && source ~/.zshrc.local
