@@ -15,7 +15,7 @@ fi
 # Symlink or source files as needed
 if ! grep -q 'source ~/.dotfiles/.zshrc' "$HOME/.zshrc" 2>/dev/null; then
   echo 'source ~/.dotfiles/.zshrc' >> "$HOME/.zshrc"
-  echo "Linked ~/.dotfiles/.zshrc into ~/.zshrc"
+  echo "linked ~/.dotfiles/.zshrc into ~/.zshrc"
 fi
 
 echo "✅ Dotfiles installed or updated."

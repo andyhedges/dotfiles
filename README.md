@@ -22,7 +22,17 @@ Please feel free to make suggestions via pull requests or 'issues'.
 
 ## ⚡️ Quick install
 
+This doesn't replace your .zshrc file it simply adds a line to source this .zshrc file after your existing one.
+
 Run this once on any new machine:
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/andyhedges/dotfiles/main/install.sh)"
+```
+
+The reload your shell
+
+```bash
+exec zsh
+```
+
