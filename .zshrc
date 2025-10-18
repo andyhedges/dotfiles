@@ -70,4 +70,6 @@ zstyle ':completion:*' menu select
 [[ -r "$HOME/.dotfiles/.functions" ]] && source "$HOME/.dotfiles/.functions"
 
 # Allow user-specific overrides
-[[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+if [[ -r "$HOME/.zshrc.local" ]]; then
+  source "$HOME/.zshrc.local"
+fi

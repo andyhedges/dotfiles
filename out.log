@@ -1,0 +1,31 @@
+/Users/andy/.zshenv:1 0> . /Users/andy/.cargo/env
+/Users/andy/.cargo/env:4 0> case :/Users/andy/.local/share/mise/installs/java/24.0.1/bin:/Applications/Sublime Text.app/Contents/SharedSupport/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/usr/local/go/bin:/Applications/Sublime Text.app/Contents/SharedSupport/bin:/Users/andy/.local/bin:/Users/andy/.cargo/bin:/Applications/iTerm.app/Contents/Resources/utilities:/Users/andy/bin:/Users/andy/go/bin:/Users/andy/bin:/Users/andy/go/bin: (*:/Users/andy/.cargo/bin:*)
+/Users/andy/.zshrc:2 1> /Users/andy/.local/bin/mise activate zsh
+/Users/andy/.zshrc:2 0> eval $'export MISE_SHELL=zsh\nexport __MISE_ORIG_PATH="$PATH"\n\nmise() {\n  local command\n  command="${1:-}"\n  if [ "$#" = 0 ]; then\n    command /Users/andy/.local/bin/mise\n    return\n  fi\n  shift\n\n  case "$command" in\n  deactivate|shell|sh)\n    # if argv doesn\'t contains -h,--help\n    if [[ ! " $@ " =~ " --help " ]] && [[ ! " $@ " =~ " -h " ]]; then\n      eval "$(command /Users/andy/.local/bin/mise "$command" "$@")"\n      return $?\n    fi\n    ;;\n  esac\n  command /Users/andy/.local/bin/mise "$command" "$@"\n}\n\n_mise_hook() {\n  eval "$(/Users/andy/.local/bin/mise hook-env -s zsh)";\n}\ntypeset -ag precmd_functions;\nif [[ -z "${precmd_functions[(r)_mise_hook]+1}" ]]; then\n  precmd_functions=( _mise_hook ${precmd_functions[@]} )\nfi\ntypeset -ag chpwd_functions;\nif [[ -z "${chpwd_functions[(r)_mise_hook]+1}" ]]; then\n  chpwd_functions=( _mise_hook ${chpwd_functions[@]} )\nfi\n\n_mise_hook\nif [ -z "${_mise_cmd_not_found:-}" ]; then\n    _mise_cmd_not_found=1\n    [ -n "$(declare -f command_not_found_handler)" ] && eval "${$(declare -f command_not_found_handler)/command_not_found_handler/_command_not_found_handler}"\n\n    function command_not_found_handler() {\n        if [[ "$1" != "mise" && "$1" != "mise-"* ]] && /Users/andy/.local/bin/mise hook-not-found -s zsh -- "$1"; then\n          _mise_hook\n          "$@"\n        elif [ -n "$(declare -f _command_not_found_handler)" ]; then\n            _command_not_found_handler "$@"\n        else\n            echo "zsh: command not found: $1" >&2\n            return 127\n        fi\n    }\nfi'
+/Users/andy/.zshrc:4 0> export PATH='/Users/andy/.local/share/mise/installs/java/24.0.1/bin:/Applications/Sublime Text.app/Contents/SharedSupport/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/usr/local/go/bin:/Applications/Sublime Text.app/Contents/SharedSupport/bin:/Users/andy/.local/bin:/Users/andy/.cargo/bin:/Applications/iTerm.app/Contents/Resources/utilities:/Users/andy/bin:/Users/andy/go/bin:/Users/andy/bin:/Users/andy/go/bin:/Users/andy/bin'
+/Users/andy/.zshrc:5 0> export PATH='/Users/andy/.local/share/mise/installs/java/24.0.1/bin:/Applications/Sublime Text.app/Contents/SharedSupport/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/usr/local/go/bin:/Applications/Sublime Text.app/Contents/SharedSupport/bin:/Users/andy/.local/bin:/Users/andy/.cargo/bin:/Applications/iTerm.app/Contents/Resources/utilities:/Users/andy/bin:/Users/andy/go/bin:/Users/andy/bin:/Users/andy/go/bin:/Users/andy/bin:/Users/andy/go/bin'
+/Users/andy/.zshrc:15 0> source /Users/andy/.dotfiles/.zshrc
+/Users/andy/.dotfiles/.zshrc:2 0> [ -d /Users/andy/.dotfiles/.git ']'
+/Users/andy/.dotfiles/.zshrc:3 0> grep -q .
+/Users/andy/.dotfiles/.zshrc:3 0> find /Users/andy/.dotfiles/.git -mtime +7 -print -quit
+/Users/andy/.dotfiles/.zshrc:9 0> setopt prompt_subst
+/Users/andy/.dotfiles/.zshrc:12 0> autoload -Uz compinit promptinit colors vcs_info add-zsh-hook
+/Users/andy/.dotfiles/.zshrc:13 0> compinit
+/Users/andy/.dotfiles/.zshrc:14 0> promptinit
+/Users/andy/.dotfiles/.zshrc:15 0> colors
+/Users/andy/.dotfiles/.zshrc:18 0> zmodload zsh/datetime
+/Users/andy/.dotfiles/.zshrc:21 0> zstyle ':vcs_info:git:*' formats '%F{yellow} %b%f'
+/Users/andy/.dotfiles/.zshrc:22 0> zstyle ':vcs_info:*' enable git
+/Users/andy/.dotfiles/.zshrc:29 0> add-zsh-hook preexec _timer_preexec
+/Users/andy/.dotfiles/.zshrc:57 0> add-zsh-hook precmd _prompt_precmd
+/Users/andy/.dotfiles/.zshrc:61 0> PROMPT=$'%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f\n%(?.%F{240}➜%f.%F{red}✗%f) ' 
+/Users/andy/.dotfiles/.zshrc:65 0> zstyle ':completion:*' menu select
+/Users/andy/.dotfiles/.zshrc:66 0> [[ -n '' ]]
+/Users/andy/.dotfiles/.zshrc:69 1> [[ -r /Users/andy/.dotfiles/.aliases ]]
+/Users/andy/.dotfiles/.zshrc:69 0> source /Users/andy/.dotfiles/.aliases
+/Users/andy/.dotfiles/.aliases:1 0> alias 'll=ls -lh'
+/Users/andy/.dotfiles/.aliases:2 0> alias 'la=ls -lha'
+/Users/andy/.dotfiles/.aliases:3 0> alias 'untar=f(){ d="${1%.tar*}"; mkdir -p "$d"; tar -xf "$1" -C "$d"; }; f'
+/Users/andy/.dotfiles/.zshrc:70 0> [[ -r /Users/andy/.dotfiles/.functions ]]
+/Users/andy/.dotfiles/.zshrc:70 0> source /Users/andy/.dotfiles/.functions
+/Users/andy/.dotfiles/.zshrc:73 0> [[ -r /Users/andy/.zshrc.local ]]
