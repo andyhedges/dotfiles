@@ -1,0 +1,15 @@
+
+# This updates the current installation of dotfiles from the git repository.
+dotupdate() {
+  local repo="$HOME/.dotfiles"
+
+  if [ -d "$repo/.git" ]; then
+    echo "Updating dotfiles..."
+    git -C "$repo" pull --quiet --ff-only &&
+      echo "Dotfiles up to date."
+  else
+    echo "No dotfiles repo found at $repo"
+    echo "Clone it with:"
+    echo "  git clone https://github.com/<yourname>/dotfiles.git \"$repo\""
+  fi
+}
