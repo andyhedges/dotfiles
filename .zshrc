@@ -6,6 +6,9 @@ if [ -d "$HOME/.dotfiles/.git" ]; then
   fi
 fi
 
+setopt prompt_subst          # allow ${...} in PROMPT/RPROMPT to expand
+
+
 # --- Initialize completion and prompt systems ---
 autoload -Uz compinit promptinit colors vcs_info
 compinit
@@ -24,7 +27,7 @@ precmd() { vcs_info }
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
 %(?.%F{240}➜%f.%F{red}✗%f) '
 # RPROMPT (right side)
-RPROMPT='%(?..%F{red}✗ %?%f )${vcs_info_msg_0_}%F{240}%j%f'
+RPROMPT='%(?..%F{red}✗ %?%f )${vcs_info_msg_0_:+$vcs_info_msg_0_ }%F{240}%j%f'
 
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} # colorize completion listings
