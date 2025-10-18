@@ -16,7 +16,5 @@ dotupdate() {
 
 dotrefresh() {
   dotupdate
-  zsh &
-  disown
-  exit 0
+  exec zsh
 }
