@@ -7,14 +7,25 @@ if [ -d "$HOME/.dotfiles/.git" ]; then
 fi
 
 # --- Initialize completion and prompt systems ---
-autoload -Uz compinit promptinit
+autoload -Uz compinit promptinit colors vcs_info
 compinit
 promptinit
+colors
+
+# Configure vcs_info for git
+zstyle ':vcs_info:git:*' formats '%F{yellow} %b%f'
+zstyle ':vcs_info:*' enable git
+
+# Ensure it's updated before every prompt
+precmd() { vcs_info }
 
 # Prompt and completion styling can follow:
+# PROMPT (left side)
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
 %(?.%F{240}➜%f.%F{red}✗%f) '
+# RPROMPT (right side)
 RPROMPT='%(?..%F{red}✗ %?%f )${vcs_info_msg_0_}%F{240}%j%f'
+
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} # colorize completion listings
 
