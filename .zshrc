@@ -26,7 +26,7 @@ precmd() { vcs_info }
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
 %(?.%F{240}➜%f.%F{red}✗%f) '
 # RPROMPT (right side)
-RPROMPT='%(?..%F{red}✗ %?%f )${vcs_info_msg_0_:+$vcs_info_msg_0_ }%F{240}%j%f'
+RPROMPT='%(?..%F{red}✗ %?%f )${vcs_info_msg_0_:+$vcs_info_msg_0_ }${${j:#0}:+%F{240}$(( j == 1 ? "job" : "jobs" )):$j%f}'
 
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} # colorize completion listings
