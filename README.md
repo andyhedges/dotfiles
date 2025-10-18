@@ -5,7 +5,7 @@ Designed to be fast, minimal, and reproducible across machines.
 
 They are customised to my preferences but you are welcome to use or modify (see LICENSE for more info).
 
-Please feel free to 
+Please feel free to make suggestions via pull requests or 'issues'.
 
 ---
 
