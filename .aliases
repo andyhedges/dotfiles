@@ -1,3 +1,20 @@
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza --group-directories-first --icons'
+elif command -v lsd >/dev/null 2>&1; then
+  alias ls='lsd --group-dirs first'
+elif command -v exa >/dev/null 2>&1; then
+  alias ls='exa --group-directories-first --icons'
+fi
 alias ll='ls -lh'
 alias la='ls -lha'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias g='git'
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph --decorate'
+alias d='docker'
+alias dc='docker compose'
 alias untar='f(){ d="${1%.tar*}"; mkdir -p "$d"; tar -xf "$1" -C "$d"; }; f'

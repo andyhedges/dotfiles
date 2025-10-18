@@ -58,6 +58,12 @@ add-zsh-hook precmd _prompt_precmd
 PROMPT='%F{240}%*%f %F{cyan}%n%f@%F{blue}%m%f:%F{green}%~%f
 %(?.%F{240}➜%f.%F{red}✗%f) '
 
+# --- Options -----------------------------------------------------------------
+setopt autocd extendedglob correct no_beep hist_ignore_dups share_history
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+
 # --- Completion and colors ------------------------------------------------
 zstyle ':completion:*' menu select
 [[ -n ${LS_COLORS-} ]] && zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} || true
