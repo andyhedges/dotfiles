@@ -8,7 +8,6 @@ fi
 
 setopt prompt_subst          # allow ${...} in PROMPT/RPROMPT to expand
 
-
 # --- Initialize completion and prompt systems ---
 autoload -Uz compinit promptinit colors vcs_info
 compinit
@@ -41,4 +40,6 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} # colorize completion list
 # For example, if your dotfiles are synced across machines, .zshrc.local can
 # hold different PATH entries, environment variables, or API keys without
 # committing them.
-[ -f ~/.zshrc.local ] && source ~/.zshrc.local
+if [[ -r "$HOME/.zshrc.local" ]]; then
+  source "$HOME/.zshrc.local"
+fi

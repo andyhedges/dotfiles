@@ -24,4 +24,5 @@ dotupdate() {
 dotrefresh() {
   dotupdate || true    # do not leak a non-zero into the new shell
   exec zsh -l          # start a fresh login shell
+  return 0
 }
