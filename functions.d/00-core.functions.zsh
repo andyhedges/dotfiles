@@ -1,4 +1,7 @@
 
+
+#-- Dotfiles update and refresh functions ------------------------------------
+
 dotupdate() {
   local repo="$HOME/.dotfiles"
   if [[ ! -d "$repo/.git" ]]; then
