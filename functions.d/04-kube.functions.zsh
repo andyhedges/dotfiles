@@ -17,44 +17,19 @@ kk() {
 }
 
 # smart fuzzy switch (uses fzf if installed)
-kctx2() {
-  local ctx
-  ctx=$(kubectl config get-contexts -o name | fzf --prompt="Select context: ")
-  [[ -n "$ctx" ]] && kubectl config use-context "$ctx"
-}
-
-# Switch Kubernetes context interactively
 kctx() {
-    local contexts ctx_count choice
-    contexts=($(kubectl config get-contexts -o name))
-    ctx_count=${#contexts[@]}
-
-    if (( ctx_count == 0 )); then
-        echo "No kube contexts found."
-        return 1
-    fi
-
-    # If user passed an exact name → just switch
-    if [[ -n "$1" ]]; then
-        kubectl config use-context "$1"
-        return
-    fi
-
-    echo "Available contexts:"
+  if command -v fzf >/dev/null 2>&1; then
+    local ctx
+    ctx=$(kubectl config get-contexts -o name | fzf --prompt="Select context: ")
+    [[ -n "$ctx" ]] && kubectl config use-context "$ctx"
+  else
+    echo "fzf not installed; falling back to numbered selection."
+    local contexts=($(kubectl config get-contexts -o name))
     local i=1
-    for c in "${contexts[@]}"; do
-        printf "%2d) %s\n" "$i" "$c"
-        ((i++))
-    done
-
-    echo -n "Select context [1-$ctx_count]: "
-    read -r choice
-    if [[ "$choice" =~ ^[0-9]+$ && choice -ge 1 && choice -le $ctx_count ]]; then
-        kubectl config use-context "${contexts[choice-1]}"
-    else
-        echo "Invalid choice."
-        return 1
-    fi
+    for c in "${contexts[@]}"; do printf "%2d) %s\n" "$i" "$c"; ((i++)); done
+    read -r choice\?"Select context: "
+    [[ "$choice" =~ ^[0-9]+$ ]] && kubectl config use-context "${contexts[choice-1]}"
+  fi
 }
 
 # Restart all pods in a namespace
