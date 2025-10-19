@@ -17,25 +17,22 @@ kk() {
 }
 
 kk2() {
-    if [[ $# -eq 0 || "$1" == -* ]]; then
-        kubectl get all -A "$@"
-        return
-    fi
+  if [[ $# -eq 0 || "$1" == -* ]]; then
+    kubectl get all -A "$@"
+    return
+  fi
 
-    names=()
-    while [[ $# -gt 0 && "$1" != -* ]]; do
-        names+=("$1")
-        shift
-    done
-    extra=("$@")
+  names=()
+  while [[ $# -gt 0 && "$1" != -* ]]; do names+=("$1"); shift; done
+  extra=("$@")
 
-    for ns in "${names[@]}"; do
-        echo
-        echo "%F{cyan}╭──────────────────────────────╮%f"
-        printf "│ %s%-28s│\n" "%F{white}Namespace:%f " "$ns"
-        echo "%F{cyan}╰──────────────────────────────╯%f"
-        kubectl get all -n "$ns" "${extra[@]}" | column -t
-    done
+  for ns in "${names[@]}"; do
+    echo
+    print -P '%F{cyan}╭──────────────────────────────╮%f'
+    print -P "│ %F{white}Namespace:%f ${(r:26:: :)ns} │"
+    print -P '%F{cyan}╰──────────────────────────────╯%f'
+    kubectl get all -n "$ns" "${extra[@]}" | column -t
+  done
 }
 
 
