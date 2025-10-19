@@ -1,3 +1,7 @@
+# --- Just disable mail checking ---------------------------------------
+unset MAIL
+unset MAILCHECK
+
 # --- Auto-update dotfiles occasionally (every 7 days) ---------------------
 if [ -d "$HOME/.dotfiles/.git" ]; then
   if find "$HOME/.dotfiles/.git" -mtime +7 -print -quit | grep -q .; then
