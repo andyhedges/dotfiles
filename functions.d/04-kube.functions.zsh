@@ -16,6 +16,14 @@ kk() {
     done
 }
 
+# smart fuzzy switch (uses fzf if installed)
+kctx2() {
+  local ctx
+  ctx=$(kubectl config get-contexts -o name | fzf --prompt="Select context: ")
+  [[ -n "$ctx" ]] && kubectl config use-context "$ctx"
+}
+
+# Switch Kubernetes context interactively
 kctx() {
     local contexts ctx_count choice
     contexts=($(kubectl config get-contexts -o name))
@@ -47,4 +55,10 @@ kctx() {
         echo "Invalid choice."
         return 1
     fi
+}
+
+# Restart all pods in a namespace
+krestart() {
+  local ns="${1:-default}"
+  kubectl rollout restart deploy -n "$ns"
 }
