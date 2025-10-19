@@ -1,8 +1,5 @@
-# --- Just disable mail checking ---------------------------------------
-unset MAIL
-unset MAILCHECK
 
-echo "Welcome to dotfiles zsh configuration!"
+zsh ~/.dotfiles/banner.zsh
 
 # --- Auto-update dotfiles occasionally (every 7 days) ---------------------
 if [ -d "$HOME/.dotfiles/.git" ]; then

@@ -1,0 +1,64 @@
+# -- Git aliases ----------------------------------------------------
+alias g='git'
+alias ga='git add'
+alias gaa='git add -A'
+alias gb='git branch -vv'
+alias gco='git checkout'
+alias gsw='git switch'
+alias gst='git status -sb'
+alias gd='git diff'
+alias gdc='git diff --cached'
+alias gl='git log --oneline --decorate --graph'
+alias glo='git log --oneline --decorate --graph --all'
+
+alias gc='git commit -v'
+alias gcm='git commit -m'
+alias gca='git commit -a'
+alias gcam='git commit -am'
+alias gcan='git commit --amend --no-edit'
+alias gfix='git commit --fixup'
+alias grs='git restore'
+alias grss='git restore --staged'
+
+alias gnb='git checkout -b'      # new branch
+alias gup='git fetch origin && git rebase origin/$(git symbolic-ref --short HEAD)'
+alias gm='git merge'
+alias gmf='git merge --ff-only'
+alias gcp='git cherry-pick'
+alias grb='git rebase -i'
+alias grbc='git rebase --continue'
+alias grba='git rebase --abort'
+
+alias gclean='git clean -fd'
+alias gundo='git reset --soft HEAD~1'
+alias gprune='git fetch --all -p'
+alias gdelgone='git branch -vv | awk "/: gone]/ {print \$1}" | xargs git branch -d'
+alias greset='git reset --hard'
+alias gwipe='git add -A && git commit -qm "wipe" && git reset --hard HEAD~1'
+
+alias gps='git push'
+alias gpsf='git push --force-with-lease'
+alias gpl='git pull --rebase'
+alias gpr='git pull --rebase origin $(git branch --show-current)'
+alias gtrack='git branch --set-upstream-to=origin/$(git branch --show-current)'
+
+alias gblame='git blame -w'
+alias gshow='git show'
+alias gtag='git tag -l | sort -V'
+alias gchanges='git diff --stat origin/main'
+alias ggraph='git log --graph --abbrev-commit --decorate --format=format:"%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)" --all'
+alias gtoday='git log --since=midnight --oneline --author="$(git config user.name)"'
+
+alias gsync='git fetch origin -p && git pull --rebase'
+alias gpushnew='git push -u origin $(git branch --show-current)'
+alias grefresh='git fetch origin && git rebase origin/main'
+alias gmine='git log --author="$(git config user.name)" --oneline --decorate --graph'
+alias gtop='cd $(git rev-parse --show-toplevel || echo .)'
+
+alias gcop='git checkout -p'  # interactive patch checkout
+alias gpf='git push --force-with-lease'
+alias grmbranch='git branch -D'
+alias gopen='open $(git config remote.origin.url | sed "s/git@github.com:/https:\/\/github.com\//;s/\.git$//")'
+
+
+
