@@ -30,7 +30,7 @@ Run this once on any new machine:
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/andyhedges/dotfiles/main/install.sh)"
 ```
 
-The reload your shell
+Then reload your shell
 
 ```bash
 exec zsh
