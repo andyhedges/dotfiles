@@ -3,18 +3,23 @@ kk() {
         kubectl get all -A "$@"
         return
     fi
+
     names=()
     while [[ $# -gt 0 && "$1" != -* ]]; do
         names+=("$1")
         shift
     done
     extra=("$@")
+
     for ns in "${names[@]}"; do
-        echo "===== $ns ====="
-        kubectl get all -n "$ns" "${extra[@]}"
         echo
+        echo "%F{cyan}╭──────────────────────────────╮%f"
+        printf "│ %s%-28s│\n" "%F{white}Namespace:%f " "$ns"
+        echo "%F{cyan}╰──────────────────────────────╯%f"
+        kubectl get all -n "$ns" "${extra[@]}" | column -t
     done
 }
+
 
 kctx() {
     local contexts ctx_count choice
