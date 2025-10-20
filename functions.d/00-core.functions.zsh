@@ -37,6 +37,8 @@ NERD_FONTS=(
   # "OverpassMono"
 )
 
+echo $NERD_FONTS
+
 
 dotupdate() {
   local repo="$HOME/.dotfiles"
