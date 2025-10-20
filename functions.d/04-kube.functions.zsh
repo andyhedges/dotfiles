@@ -28,7 +28,7 @@ kctx() {
     local i=1
     for c in "${contexts[@]}"; do printf "%2d) %s\n" "$i" "$c"; ((i++)); done
     read -r choice\?"Select context: "
-    [[ "$choice" =~ ^[0-9]+$ ]] && kubectl config use-context "${contexts[choice-1]}"
+    [[ "$choice" =~ ^[0-9]+$ ]] && kubectl config use-context "${contexts[choice]}"
   fi
 }
 
