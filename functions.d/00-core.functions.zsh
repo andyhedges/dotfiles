@@ -31,8 +31,8 @@ install_deps(){
     eval "$(/opt/homebrew/bin/brew shellenv)"
   fi
 
-  echo "=== Installing core packages (fzf, eza) ==="
-  brew install fzf eza
+  echo "=== Installing core packages (fzf, eza, jq) ==="
+  brew install --quiet fzf eza jq
 
   FONT_DIR="$HOME/Library/Fonts"
   mkdir -p "$FONT_DIR"
