@@ -18,6 +18,9 @@ NERD_FONTS=(
   "AnonymousPro"
   "Inconsolata"
   "DejaVuSansMono"
+  "NotoSansMono"
+  "IBM Plex Mono"
+  "GoMono"
   "SpaceMono"
   "Hermit"
   "3270"
@@ -27,6 +30,8 @@ NERD_FONTS=(
   "BigBlueTerminal"
   "Gohu"
   "ProFont"
+  "RecursiveMono"
+  "ShureTechMono"
   "Tinos"
   "Ubuntu"
   "OverpassMono"
@@ -87,24 +92,8 @@ typeset -A FONT_ALIASES=(
   [TerminusTTF]=TerminessTTF
 )
 
-font_installed() {
-  emulate -L zsh
-  setopt extended_glob
+# zsh-only, robust
 
-  local name="$1"
-  local alt="${FONT_ALIASES[$name]:-$name}"
-
-  # Build alternation covering spaced and nospace variants
-  local a1="${name// /}"
-  local a2="${alt// /}"
-  local pat="(${name}|${a1}|${alt}|${a2})*NerdFont*.(ttf|otf)(N)"
-
-  local -a hits=(
-    $HOME/Library/Fonts/$~pat
-    /Library/Fonts/$~pat
-  )
-  (( ${#hits} > 0 ))
-}
 
 
 install_font() {
