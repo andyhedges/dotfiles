@@ -86,6 +86,7 @@ brew_install_if_missing() {
 
 font_installed() {
   local name="$1"
+  setopt localoptions nonomatch
   # Check if any .ttf file containing the font name and "Nerd" exists
   if ls "$FONT_DIR"/*"${name// /}"*Nerd*Font*.ttf >/dev/null 2>&1; then
     return 0
@@ -112,7 +113,7 @@ install_font() {
   unzip -qq "$tmpdir/$font.zip" -d "$tmpdir/$font"
   cp "$tmpdir/$font"/*.ttf "$FONT_DIR"/
   rm -rf "$tmpdir"
-  log "✅ Installed $font Nerd Font"
+  log "Installed $font Nerd Font"
   return 0
 }
 
