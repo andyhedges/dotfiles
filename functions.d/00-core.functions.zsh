@@ -7,7 +7,7 @@ NERD_FONTS=(
   "FiraCode"
   "CascadiaCode"
   "Iosevka"
-  # "Hack"
+  "Hack"
   # "SourceCodePro"
   # "UbuntuMono"
   # "Meslo"
