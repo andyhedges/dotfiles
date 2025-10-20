@@ -94,6 +94,8 @@ font_installed() {
     CascadiaCode)  alt=CaskaydiaCove ;;
     SourceCodePro) alt=SauceCodePro  ;;
     Meslo)         alt=MesloLGS      ;;
+    Terminus)      alt=Terminess     ;;
+    TerminusTTF)   alt=TerminessTTF  ;;
     *)             alt="$name"       ;;
   esac
 
