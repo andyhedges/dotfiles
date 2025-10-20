@@ -84,20 +84,24 @@ brew_install_if_missing() {
 }
 
 font_installed() {
-  emulate -L zsh              # local zsh semantics and options
-  setopt extended_glob        # enables glob qualifiers like (N)
+  emulate -L zsh
+  setopt extended_glob
 
   local name="$1"
   local nospace="${name// /}"
-  local files=()
 
-  # Search user and system font dirs; (N) => expand to nothing if no match
-  files+=("$HOME/Library/Fonts"/*${name}*Nerd*Font*.(ttf|otf)(N))
-  files+=("$HOME/Library/Fonts"/*${nospace}*Nerd*Font*.(ttf|otf)(N))
-  files+=("/Library/Fonts"/*${name}*Nerd*Font*.(ttf|otf)(N))
-  files+=("/Library/Fonts"/*${nospace}*Nerd*Font*.(ttf|otf)(N))
+  # Special-case legacy renames
+  local alt="$name"
+  case "$name" in
+    CascadiaCode) alt="CaskaydiaCove" ;;
+    *) ;;
+  esac
 
-  (( ${#files} > 0 ))
+  local fonts=()
+  fonts+=("$HOME/Library/Fonts"/*(${name}|${nospace}|${alt})*Nerd*Font*.(ttf|otf)(N))
+  fonts+=("/Library/Fonts"/*(${name}|${nospace}|${alt})*Nerd*Font*.(ttf|otf)(N))
+
+  (( ${#fonts} > 0 ))
 }
 
 install_font() {
