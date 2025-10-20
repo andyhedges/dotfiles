@@ -89,7 +89,7 @@ install_fonts(){
     cache_invalid=1
   done
 
-  if [ "$cache_invalid" -eq 1 ]; then
+  if [ $cache_invalid -eq 1 ]; then
     echo "=== Refreshing font cache ==="
     fc-cache -fv >/dev/null 2>&1 || true
   fi
