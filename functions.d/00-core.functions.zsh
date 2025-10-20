@@ -83,13 +83,13 @@ install_font() {
 
 install_fonts(){
   echo "=== Checking Nerd Fonts ==="
-  cache_invalid=false
+  local cache_invalid=0
   for f in "${NERD_FONTS[@]}"; do
     install_font "$f"
-    cache_invalid=true
+    cache_invalid=1
   done
 
-  if [ "$cache_invalid" = true ]; then
+  if [ "$cache_invalid" -eq 1 ]; then
     echo "=== Refreshing font cache ==="
     fc-cache -fv >/dev/null 2>&1 || true
   fi
