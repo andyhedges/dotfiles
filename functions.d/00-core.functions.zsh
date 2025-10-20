@@ -37,6 +37,12 @@ NERD_FONTS=(
   # "OverpassMono"
 )
 
+typeset -A FONT_ALIASES=(
+  [CascadiaCode]=CaskaydiaCove
+  [SourceCodePro]=SauceCodePro
+  [Meslo]=MesloLGS
+)
+
 dotupdate() {
   local repo="$HOME/.dotfiles"
   if [[ ! -d "$repo/.git" ]]; then
@@ -85,23 +91,20 @@ brew_install_if_missing() {
 
 font_installed() {
   emulate -L zsh
-  setopt extended_glob
+  setopt extended_glob   # enables (N) and (|) etc.
 
   local name="$1"
+  local alt="${FONT_ALIASES[$name]-$name}"
   local nospace="${name// /}"
+  local altnospace="${alt// /}"
 
-  # Special-case legacy renames
-  local alt="$name"
-  case "$name" in
-    CascadiaCode) alt="CaskaydiaCove" ;;
-    *) ;;
-  esac
+  local -a files=()
+  for dir in "$HOME/Library/Fonts" "/Library/Fonts"; do
+    files+=($dir/*(${name}|${nospace}|${alt}|${altnospace})*Nerd*Font*.(ttf|otf)(N))
+    files+=($dir/*(${name}|${nospace}|${alt}|${altnospace})*Nerd*Font*(Mono|Propo).(ttf|otf)(N))
+  done
 
-  local fonts=()
-  fonts+=("$HOME/Library/Fonts"/*(${name}|${nospace}|${alt})*Nerd*Font*.(ttf|otf)(N))
-  fonts+=("/Library/Fonts"/*(${name}|${nospace}|${alt})*Nerd*Font*.(ttf|otf)(N))
-
-  (( ${#fonts} > 0 ))
+  (( ${#files} > 0 ))
 }
 
 install_font() {
