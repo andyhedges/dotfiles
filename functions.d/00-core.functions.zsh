@@ -90,20 +90,34 @@ typeset -A FONT_ALIASES=(
   [Meslo]=MesloLGS
 )
 
+# zsh-only, robust
 font_installed() {
-  local name="$1"
-  local alt="${FONT_ALIASES[$name]:-$name}"
-  local rx="(${name}|${name// /}|${alt}|${alt// /}).*Nerd.*Font"
+  emulate -L zsh
+  setopt extended_glob
 
-  for dir in "$HOME/Library/Fonts" "/Library/Fonts"; do
-    if find "$dir" -maxdepth 1 -type f \
-         \( -iname '*nerdfont*.ttf' -o -iname '*nerdfont*.otf' \) -print \
-         | grep -Eiq "$rx"
-    then
-      return 0
-    fi
-  done
-  return 1
+  local name="$1"
+  # Map download name -> installed family prefix
+  local alt
+  case "$name" in
+    CascadiaCode)  alt=CaskaydiaCove ;;
+    SourceCodePro) alt=SauceCodePro  ;;
+    Meslo)         alt=MesloLGS      ;;
+    *)             alt="$name"       ;;
+  esac
+
+  local nospace="${name// /}"
+  local altns="${alt// /}"
+
+  # Build one alternation that covers all variants
+  local pat="(${name}|${nospace}|${alt}|${altns})*NerdFont*.(ttf|otf)(N)"
+
+  # Search user and system font dirs; (N) => no-match becomes empty, not an error
+  local -a hits=(
+    $HOME/Library/Fonts/$~pat
+    /Library/Fonts/$~pat
+  )
+
+  (( ${#hits} > 0 ))
 }
 
 
