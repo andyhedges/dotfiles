@@ -18,7 +18,6 @@ NERD_FONTS=(
   "AnonymousPro"
   "Inconsolata"
   "DejaVuSansMono"
-  "NotoSansMono"
   "IBM Plex Mono"
   "GoMono"
   "SpaceMono"
@@ -82,15 +81,6 @@ brew_install_if_missing() {
     log "$pkg is already installed."
   fi
 }
-
-# Map archive names -> on-disk family names
-typeset -A FONT_ALIASES=(
-  [CascadiaCode]=CaskaydiaCove
-  [SourceCodePro]=SauceCodePro
-  [Meslo]=MesloLGS
-  [Terminus]=Terminess
-  [TerminusTTF]=TerminessTTF
-)
 
 # zsh-only, robust
 font_installed() {
