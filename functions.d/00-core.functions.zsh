@@ -88,35 +88,26 @@ typeset -A FONT_ALIASES=(
   [CascadiaCode]=CaskaydiaCove
   [SourceCodePro]=SauceCodePro
   [Meslo]=MesloLGS
+  [Terminus]=Terminess
+  [TerminusTTF]=TerminessTTF
 )
 
-# zsh-only, robust
 font_installed() {
   emulate -L zsh
   setopt extended_glob
 
   local name="$1"
-  # Map download name -> installed family prefix
-  local alt
-  case "$name" in
-    CascadiaCode)  alt=CaskaydiaCove ;;
-    SourceCodePro) alt=SauceCodePro  ;;
-    Meslo)         alt=MesloLGS      ;;
-    *)             alt="$name"       ;;
-  esac
+  local alt="${FONT_ALIASES[$name]:-$name}"
 
-  local nospace="${name// /}"
-  local altns="${alt// /}"
+  # Build alternation covering spaced and nospace variants
+  local a1="${name// /}"
+  local a2="${alt// /}"
+  local pat="(${name}|${a1}|${alt}|${a2})*NerdFont*.(ttf|otf)(N)"
 
-  # Build one alternation that covers all variants
-  local pat="(${name}|${nospace}|${alt}|${altns})*NerdFont*.(ttf|otf)(N)"
-
-  # Search user and system font dirs; (N) => no-match becomes empty, not an error
   local -a hits=(
     $HOME/Library/Fonts/$~pat
     /Library/Fonts/$~pat
   )
-
   (( ${#hits} > 0 ))
 }
 
