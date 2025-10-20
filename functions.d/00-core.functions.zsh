@@ -31,11 +31,23 @@ install_deps(){
     eval "$(/opt/homebrew/bin/brew shellenv)"
   fi
 
-  echo "=== Installing core packages (fzf, eza, jq) ==="
-  brew install --quiet fzf eza jq
+  brew_install_if_missing eza
+  brew_install_if_missing fzf
+  brew_install_if_missing jq
 
   FONT_DIR="$HOME/Library/Fonts"
   mkdir -p "$FONT_DIR"
+}
+
+brew_install_if_missing() {
+  local pkg="$1"
+  if ! have_cmd $pkg; then
+    brew install --quiet $pkg
+  elif brew list --formula | grep -q "^$pkg\$"; then
+    echo "$pkg is already installed via Homebrew."
+  else
+    echo "$pkg is already installed."
+  fi
 }
 
 font_installed() {
