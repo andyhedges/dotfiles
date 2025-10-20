@@ -85,17 +85,20 @@ brew_install_if_missing() {
 }
 
 font_installed() {
+  emulate -L zsh              # local zsh semantics and options
+  setopt extended_glob        # enables glob qualifiers like (N)
+
   local name="$1"
-  setopt localoptions nonomatch
-  # Check if any .ttf file containing the font name and "Nerd" exists
-  if ls "$FONT_DIR"/*"${name// /}"*Nerd*Font*.ttf >/dev/null 2>&1; then
-    return 0
-  fi
-  # Optional: also check fontconfig catalog if present
-  if command -v fc-list >/dev/null 2>&1 && fc-list | grep -qi "$name Nerd"; then
-    return 0
-  fi
-  return 1
+  local nospace="${name// /}"
+  local files=()
+
+  # Search user and system font dirs; (N) => expand to nothing if no match
+  files+=("$HOME/Library/Fonts"/*${name}*Nerd*Font*.(ttf|otf)(N))
+  files+=("$HOME/Library/Fonts"/*${nospace}*Nerd*Font*.(ttf|otf)(N))
+  files+=("/Library/Fonts"/*${name}*Nerd*Font*.(ttf|otf)(N))
+  files+=("/Library/Fonts"/*${nospace}*Nerd*Font*.(ttf|otf)(N))
+
+  (( ${#files} > 0 ))
 }
 
 install_font() {
