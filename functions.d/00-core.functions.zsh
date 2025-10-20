@@ -67,7 +67,7 @@ install_font() {
   local font="$1"
   if font_installed "$font"; then
     log "$font Nerd Font already installed"
-    return
+    return 1
   fi
 
   log "Installing $font Nerd Font..."
@@ -79,17 +79,19 @@ install_font() {
   cp "$tmpdir/$font"/*.ttf "$FONT_DIR"/
   rm -rf "$tmpdir"
   log "✅ Installed $font Nerd Font"
+  return 0
 }
 
 install_fonts(){
   echo "=== Checking Nerd Fonts ==="
   local cache_invalid=0
   for f in "${NERD_FONTS[@]}"; do
-    install_font "$f"
-    cache_invalid=1
+    if install_font "$f"; then
+      cache_invalid=1
+    fi
   done
 
-  if [ $cache_invalid -eq 1 ]; then
+  if [ "$changed" -eq 1 ] && command -v fc-cache >/dev/null 2>&1; then
     echo "=== Refreshing font cache ==="
     fc-cache -fv >/dev/null 2>&1 || true
   fi
