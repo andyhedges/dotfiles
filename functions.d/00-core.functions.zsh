@@ -2,6 +2,42 @@
 
 log() { echo -e "\033[0;32m==>\033[0m $*"; }
 
+NERD_FONTS=(
+  "JetBrainsMono"
+  "FiraCode"
+  "CascadiaCode"
+  "Iosevka"
+  "Hack"
+  "SourceCodePro"
+  "UbuntuMono"
+  "Meslo"
+  "Mononoki"
+  "VictorMono"
+  "RobotoMono"
+  "Terminus"
+  "AnonymousPro"
+  "Inconsolata"
+  "DejaVuSansMono"
+  "NotoSansMono"
+  "IBM Plex Mono"
+  "GoMono"
+  "SpaceMono"
+  "Hermit"
+  "3270"
+  "Agave"
+  "CodeNewRoman"
+  "DaddyTimeMono"
+  "BigBlueTerminal"
+  "Gohu"
+  "ProFont"
+  "RecursiveMono"
+  "ShureTechMono"
+  "Tinos"
+  "Ubuntu"
+  "OverpassMono"
+)
+
+
 dotupdate() {
   local repo="$HOME/.dotfiles"
   if [[ ! -d "$repo/.git" ]]; then
@@ -18,8 +54,6 @@ dotupdate() {
     return 1
   fi
 }
-
-NERD_FONTS=("JetBrainsMono" "FiraCode")   # Add or remove as you like
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
