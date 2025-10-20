@@ -138,7 +138,7 @@ install_fonts(){
 }
 
 dotrefresh() {
-  dotupdate && install_deps && install_fonts ||true        # don’t leak a non-zero into the restart
+  dotupdate && exec zsh -l && install_deps && install_fonts ||true        # don’t leak a non-zero into the restart
   unset __timer            # avoid showing a bogus elapsed time on first prompt
   exec zsh -l              # replace the shell; no return
 }
