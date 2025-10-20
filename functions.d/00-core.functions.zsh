@@ -37,12 +37,6 @@ NERD_FONTS=(
   # "OverpassMono"
 )
 
-typeset -A FONT_ALIASES=(
-  [CascadiaCode]=CaskaydiaCove
-  [SourceCodePro]=SauceCodePro
-  [Meslo]=MesloLGS
-)
-
 dotupdate() {
   local repo="$HOME/.dotfiles"
   if [[ ! -d "$repo/.git" ]]; then
@@ -89,23 +83,29 @@ brew_install_if_missing() {
   fi
 }
 
+# Map archive names -> on-disk family names
+typeset -A FONT_ALIASES=(
+  [CascadiaCode]=CaskaydiaCove
+  [SourceCodePro]=SauceCodePro
+  [Meslo]=MesloLGS
+)
+
 font_installed() {
-  emulate -L zsh
-  setopt extended_glob   # enables (N) and (|) etc.
-
   local name="$1"
-  local alt="${FONT_ALIASES[$name]-$name}"
-  local nospace="${name// /}"
-  local altnospace="${alt// /}"
+  local alt="${FONT_ALIASES[$name]:-$name}"
+  local rx="(${name}|${name// /}|${alt}|${alt// /}).*Nerd.*Font"
 
-  local -a files=()
   for dir in "$HOME/Library/Fonts" "/Library/Fonts"; do
-    files+=($dir/*(${name}|${nospace}|${alt}|${altnospace})*Nerd*Font*.(ttf|otf)(N))
-    files+=($dir/*(${name}|${nospace}|${alt}|${altnospace})*Nerd*Font*(Mono|Propo).(ttf|otf)(N))
+    if find "$dir" -maxdepth 1 -type f \
+         \( -iname '*nerdfont*.ttf' -o -iname '*nerdfont*.otf' \) -print \
+         | grep -Eiq "$rx"
+    then
+      return 0
+    fi
   done
-
-  (( ${#files} > 0 ))
+  return 1
 }
+
 
 install_font() {
   local font="$1"
