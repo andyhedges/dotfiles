@@ -6,7 +6,7 @@ NERD_FONTS=(
   "JetBrainsMono"
   "FiraCode"
   "CascadiaCode"
-  # "Iosevka"
+  "Iosevka"
   # "Hack"
   # "SourceCodePro"
   # "UbuntuMono"
@@ -36,9 +36,6 @@ NERD_FONTS=(
   # "Ubuntu"
   # "OverpassMono"
 )
-
-echo $NERD_FONTS
-
 
 dotupdate() {
   local repo="$HOME/.dotfiles"
@@ -138,7 +135,9 @@ install_fonts(){
 }
 
 dotrefresh() {
-  dotupdate && exec zsh -l && install_deps && install_fonts ||true        # don’t leak a non-zero into the restart
+  dotupdate || true
+  install_deps || true
+  install_fonts || true        # don’t leak a non-zero into the restart
   unset __timer            # avoid showing a bogus elapsed time on first prompt
   exec zsh -l              # replace the shell; no return
 }
