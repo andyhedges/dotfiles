@@ -1,6 +1,6 @@
-
-
 #-- Dotfiles update and refresh functions ------------------------------------
+
+log() { echo -e "\033[0;32m==>\033[0m $*"; }
 
 dotupdate() {
   local repo="$HOME/.dotfiles"
@@ -38,22 +38,35 @@ install_deps(){
   mkdir -p "$FONT_DIR"
 }
 
+font_installed() {
+  local name="$1"
+  # Check if any .ttf file containing the font name and "Nerd" exists
+  if ls "$FONT_DIR"/*"${name// /}"*Nerd*Font*.ttf >/dev/null 2>&1; then
+    return 0
+  fi
+  # Optional: also check fontconfig catalog if present
+  if command -v fc-list >/dev/null 2>&1 && fc-list | grep -qi "$name Nerd"; then
+    return 0
+  fi
+  return 1
+}
+
 install_font() {
   local font="$1"
-  local font_file_pattern="${font// /}NerdFont*.ttf"
-
-  if ls "$FONT_DIR"/$font_file_pattern >/dev/null 2>&1; then
-    echo "✅ $font Nerd Font already installed"
+  if font_installed "$font"; then
+    log "$font Nerd Font already installed"
     return
   fi
 
-  echo "⬇️  Installing $font Nerd Font..."
+  log "Installing $font Nerd Font..."
+  local tmpdir
   tmpdir=$(mktemp -d)
-  curl -fsSL -o "$tmpdir/$font.zip" "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.zip"
-  unzip -q "$tmpdir/$font.zip" -d "$tmpdir/$font"
+  curl -fsSL -o "$tmpdir/$font.zip" \
+    "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.zip"
+  unzip -qq "$tmpdir/$font.zip" -d "$tmpdir/$font"
   cp "$tmpdir/$font"/*.ttf "$FONT_DIR"/
   rm -rf "$tmpdir"
-  echo "✅ Installed $font Nerd Font"
+  log "✅ Installed $font Nerd Font"
 }
 
 install_fonts(){
