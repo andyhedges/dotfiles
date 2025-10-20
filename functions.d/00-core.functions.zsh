@@ -44,9 +44,9 @@ brew_install_if_missing() {
   if ! have_cmd $pkg; then
     brew install --quiet $pkg
   elif brew list --formula | grep -q "^$pkg\$"; then
-    echo "$pkg is already installed via Homebrew."
+    log "$pkg is already installed via Homebrew."
   else
-    echo "$pkg is already installed."
+    log "$pkg is already installed."
   fi
 }
 
