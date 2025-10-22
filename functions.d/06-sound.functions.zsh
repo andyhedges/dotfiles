@@ -1,24 +1,16 @@
-# ~/.zshrc or ~/.bashrc
 sfx() {
-  local arg="${1:-$?}"
-
+  local arg="${1:-$?}" sound
   case "$arg" in
-    good|ok|success|0)
-      command afplay /System/Library/Sounds/Glass.aiff >/dev/null 2>&1 &!
-      ;;
-    bad|fail|error|[1-9]*)
-      command afplay /System/Library/Sounds/Basso.aiff >/dev/null 2>&1 &!
-      ;;
-    notify|info|ping)
-      command afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 &!
-      ;;
-    *)
-      # fallback: use last exit code numerically if $arg isn’t a word
-      if (( arg == 0 )); then
-        command afplay /System/Library/Sounds/Glass.aiff >/dev/null 2>&1 &!
-      else
-        command afplay /System/Library/Sounds/Basso.aiff >/dev/null 2>&1 &!
-      fi
-      ;;
+    good|ok|success|0)     sound=Glass ;;
+    bad|fail|error|[1-9]*) sound=Basso ;;
+    notify|info|ping)      sound=Submarine ;;
+    *)                     (( arg == 0 )) && sound=Glass || sound=Basso ;;
   esac
+
+  if command -v setsid >/dev/null 2>&1; then
+    setsid -f afplay "/System/Library/Sounds/${sound}.aiff" >/dev/null 2>&1
+  else
+    # zsh quiet background
+    command afplay "/System/Library/Sounds/${sound}.aiff" </dev/null >/dev/null 2>&1 &!
+  fi
 }
