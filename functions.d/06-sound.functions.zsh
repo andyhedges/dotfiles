@@ -1,15 +1,24 @@
+# ~/.zshrc or ~/.bashrc
 sfx() {
   local arg="${1:-$?}"
-  local sound
 
   case "$arg" in
-    good|ok|success|0) sound="Glass" ;;
-    bad|fail|error|[1-9]*) sound="Basso" ;;
-    notify|info|ping|1[2-9][0-9]*) sound="Submarine" ;;
-    *) (( arg == 0 )) && sound="Glass" || sound="Basso" ;;
+    good|ok|success|0)
+      command afplay /System/Library/Sounds/Glass.aiff >/dev/null 2>&1 &!
+      ;;
+    bad|fail|error|[1-9]*)
+      command afplay /System/Library/Sounds/Basso.aiff >/dev/null 2>&1 &!
+      ;;
+    notify|info|ping)
+      command afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 &!
+      ;;
+    *)
+      # fallback: use last exit code numerically if $arg isn’t a word
+      if (( arg == 0 )); then
+        command afplay /System/Library/Sounds/Glass.aiff >/dev/null 2>&1 &!
+      else
+        command afplay /System/Library/Sounds/Basso.aiff >/dev/null 2>&1 &!
+      fi
+      ;;
   esac
-
-  # Detach completely so no broken-pipe messages
-  nohup afplay "/System/Library/Sounds/${sound}.aiff" >/dev/null 2>&1 &
-  disown 2>/dev/null || true
 }
