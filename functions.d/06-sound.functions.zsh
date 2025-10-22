@@ -1,28 +1,24 @@
 # ~/.zshrc or ~/.bashrc
 sfx() {
-  local arg="$1"
-  local code
+  local arg="${1:-$?}"
 
   case "$arg" in
-    good|ok|success)
-      code=0
+    good|ok|success|0)
+      command afplay /System/Library/Sounds/Glass.aiff >/dev/null 2>&1 &!
       ;;
-    bad|fail|error)
-      code=1
+    bad|fail|error|[1-9]*)
+      command afplay /System/Library/Sounds/Basso.aiff >/dev/null 2>&1 &!
       ;;
-    ''|*[!0-9]*)   # if no arg or not numeric, use last exit code
-      code=${?}
+    notify|info|ping)
+      command afplay /System/Library/Sounds/Submarine.aiff >/dev/null 2>&1 &!
       ;;
-    *)              # numeric arg
-      code=$arg
+    *)
+      # fallback: use last exit code numerically if $arg isn’t a word
+      if (( arg == 0 )); then
+        command afplay /System/Library/Sounds/Glass.aiff >/dev/null 2>&1 &!
+      else
+        command afplay /System/Library/Sounds/Basso.aiff >/dev/null 2>&1 &!
+      fi
       ;;
   esac
-
-  if (( code == 0 )); then
-    afplay /System/Library/Sounds/Glass.aiff &>/dev/null 2>&1 &!
-  elif (( code < 128 )); then
-    afplay /System/Library/Sounds/Basso.aiff &>/dev/null 2>&1 &!
-  else
-    afplay /System/Library/Sounds/Submarine.aiff &>/dev/null 2>&1 &!
-  fi
 }
