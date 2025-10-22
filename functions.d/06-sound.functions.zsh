@@ -19,10 +19,10 @@ sfx() {
   esac
 
   if (( code == 0 )); then
-    afplay /System/Library/Sounds/Glass.aiff &>/dev/null &
+    afplay /System/Library/Sounds/Glass.aiff &>/dev/null 2>&1 &!
   elif (( code < 128 )); then
-    afplay /System/Library/Sounds/Basso.aiff &>/dev/null &
+    afplay /System/Library/Sounds/Basso.aiff &>/dev/null 2>&1 &!
   else
-    afplay /System/Library/Sounds/Submarine.aiff &>/dev/null &
+    afplay /System/Library/Sounds/Submarine.aiff &>/dev/null 2>&1 &!
   fi
 }
