@@ -1,12 +1,28 @@
+# ~/.zshrc or ~/.bashrc
 sfx() {
-  case "$1" in
+  local arg="$1"
+  local code
+
+  case "$arg" in
     good|ok|success)
-      afplay /System/Library/Sounds/Glass.aiff ;;
+      code=0
+      ;;
     bad|fail|error)
-      afplay /System/Library/Sounds/Basso.aiff ;;
-    notify)
-      afplay /System/Library/Sounds/Ping.aiff ;;
-    *)
-      echo "Usage: sfx {good|bad|notify}" ;;
+      code=1
+      ;;
+    ''|*[!0-9]*)   # if no arg or not numeric, use last exit code
+      code=${?}
+      ;;
+    *)              # numeric arg
+      code=$arg
+      ;;
   esac
+
+  if (( code == 0 )); then
+    afplay /System/Library/Sounds/Glass.aiff &>/dev/null &
+  elif (( code < 128 )); then
+    afplay /System/Library/Sounds/Basso.aiff &>/dev/null &
+  else
+    afplay /System/Library/Sounds/Submarine.aiff &>/dev/null &
+  fi
 }
