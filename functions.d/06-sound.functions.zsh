@@ -2,8 +2,8 @@ sfx() {
   local arg="${1:-$?}" sound
   case "$arg" in
     good|ok|success|0)     sound=Glass ;;
-    bad|fail|error|[1-9]*) sound=Sosumi ;;
-    notify|info|ping)      sound=Submarine ;;
+    bad|fail|error|[1-9]*) sound=Funk ;;
+    notify|info|ping)      sound=Ping ;;
     *)                     (( arg == 0 )) && sound=Glass || sound=Basso ;;
   esac
 
