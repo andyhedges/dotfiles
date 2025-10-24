@@ -123,89 +123,86 @@ mssh() {
 }
 
 margs() {
-    # usage examples:
+    # Usage:
     #   cat hosts.txt | margs ssh
     #   margs ssh < hosts.txt
     #   margs ping -c 1 < hosts.txt
     #
-    # behaviour:
-    #   - reads one target per line from stdin
-    #   - creates a tmux session (if needed)
-    #   - opens one pane per target
-    #   - runs "$@" plus that target in that pane
-    #
-    #   e.g. line "server1" becomes: ssh server1
+    # Behaviour:
+    #   - reads one item per line from stdin
+    #   - if you're already in tmux:
+    #       creates panes in this window and runs "$@" <item> in each
+    #   - if you're NOT in tmux:
+    #       creates (or replaces) a detached tmux session called "margs",
+    #       builds all the panes there, and exits
+    #       you then do: tmux attach -t margs
 
     if [[ $# -lt 1 ]]; then
-        print "margs: need a command, e.g. 'margs ssh' or 'margs ping -c 1'" >&2
+        print "margs: need a command prefix, e.g. 'margs ssh' or 'margs ping -c 1'" >&2
+        return 1
+    fi
+    local base_cmd=("$@")
+
+    # read stdin into array "items"
+    local items=()
+    while IFS=$'\n' read -r line; do
+        [[ -z "$line" ]] && continue
+        items+=("$line")
+    done
+
+    if [[ ${#items[@]} -eq 0 ]]; then
+        print "margs: no input lines" >&2
         return 1
     fi
 
-    local base_cmd=("$@")
-
-    # 1. read stdin into a temp file so we can replay it later inside tmux
-    local tmpfile
-    tmpfile=$(mktemp /tmp/margs.XXXXXX) || { print "mktemp failed" >&2; return 1; }
-    cat > "$tmpfile"
-
-    # 2. script that will actually run INSIDE tmux
-    #    it:
-    #    - rebuilds the command prefix
-    #    - reads the tmpfile lines
-    #    - creates panes and sends commands
-    local worker='
-        base_cmd_marker=__BASE_CMD_SPLIT__
-        tmpfile_marker=__TMPFILE_SPLIT__
-
-        # reconstruct array and vars
-        eval "base_cmd=(${base_cmd_marker})"
-        tmpfile="$tmpfile_marker"
-
-        # read hosts/targets
-        mapfile -t items < "$tmpfile"
-
-        # strip blank lines
-        cleaned=()
-        for l in "${items[@]}"; do
-            [[ -z "$l" ]] && continue
-            cleaned+=("$l")
-        done
-        items=("${cleaned[@]}")
-
-        if [[ ${#items[@]} -eq 0 ]]; then
-            print "margs: no input" >&2
-            exit 1
-        fi
-
-        first=1
-        for item in "${items[@]}"; do
+    if [[ -n "$TMUX" ]]; then
+        # Case 1: we're already inside tmux.
+        # Use the current window/pane and tile it.
+        local first=1
+        local it
+        for it in "${items[@]}"; do
             if (( first )); then
-                # first target: reuse the current pane
-                tmux send-keys -t "$TMUX_PANE" "$(printf "%q " "${base_cmd[@]}" "$item")" C-m
+                tmux send-keys -t "$TMUX_PANE" "$(printf '%q ' "${base_cmd[@]}" "$it")" C-m
                 first=0
             else
-                # all others: new pane
                 tmux split-window -v
-                tmux send-keys "$(printf "%q " "${base_cmd[@]}" "$item")" C-m
+                tmux send-keys "$(printf '%q ' "${base_cmd[@]}" "$it")" C-m
                 tmux select-layout tiled >/dev/null 2>&1
             fi
         done
-
         tmux select-layout tiled >/dev/null 2>&1
-    '
-
-    if [[ -n "$TMUX" ]]; then
-        # already in tmux, run worker now in this tmux
-        eval "${worker//__BASE_CMD_SPLIT__/$(printf '%q ' "${base_cmd[@]}")//__TMPFILE_SPLIT__/$tmpfile}"
-    else
-        # not in tmux:
-        # start a brand new tmux session that immediately runs the worker
-        tmux new-session zsh -c \
-            "$(printf '%s' "$worker" \
-                | sed "s|__BASE_CMD_SPLIT__|$(printf '%q ' "${base_cmd[@]}")|g" \
-                | sed "s|__TMPFILE_SPLIT__|$tmpfile|g" )"
+        return 0
     fi
 
-    # 3. clean up
-    rm -f "$tmpfile"
+    # Case 2: NOT already in tmux.
+    # We'll build or rebuild a detached session "margs", window 0.
+    # Then you can `tmux attach -t margs` after this function returns,
+    # from a real tty, so no "not a terminal".
+
+    local session="margs"
+
+    # kill stale session with that name if it exists
+    tmux has-session -t "$session" 2>/dev/null && tmux kill-session -t "$session"
+
+    # start new detached session running an idle shell
+    tmux new-session -d -s "$session" zsh
+
+    # now populate panes in that session
+    # start by targeting session:0.0 (window 0, pane 0)
+    local target_window="${session}:0"
+    local first=1
+    local it
+    for it in "${items[@]}"; do
+        if (( first )); then
+            tmux send-keys -t "${target_window}.0" "$(printf '%q ' "${base_cmd[@]}" "$it")" C-m
+            first=0
+        else
+            tmux split-window -t "$target_window" -v
+            tmux send-keys -t "$target_window" "$(printf '%q ' "${base_cmd[@]}" "$it")" C-m
+            tmux select-layout -t "$target_window" tiled >/dev/null 2>&1
+        fi
+    done
+    tmux select-layout -t "$target_window" tiled >/dev/null 2>&1
+
+    print "tmux session '$session' is ready. Run: tmux attach -t $session"
 }
