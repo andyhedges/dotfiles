@@ -123,28 +123,48 @@ mssh() {
 }
 
 margs() {
+    # usage examples:
+    #   cat hosts.txt | margs ssh
+    #   margs ssh < hosts.txt
+    #   margs ping -c 1 < hosts.txt
+    #
+    # behaviour:
+    #   - reads one target per line from stdin
+    #   - creates a tmux session (if needed)
+    #   - opens one pane per target
+    #   - runs "$@" plus that target in that pane
+    #
+    #   e.g. line "server1" becomes: ssh server1
+
     if [[ $# -lt 1 ]]; then
-        print "margs: need a command, e.g. 'margs ssh'" >&2
+        print "margs: need a command, e.g. 'margs ssh' or 'margs ping -c 1'" >&2
         return 1
     fi
+
     local base_cmd=("$@")
 
-    # read stdin once and stash it so we can reinvoke inside tmux if needed
+    # 1. read stdin into a temp file so we can replay it later inside tmux
     local tmpfile
     tmpfile=$(mktemp /tmp/margs.XXXXXX) || { print "mktemp failed" >&2; return 1; }
     cat > "$tmpfile"
 
-    # define an inner worker as a here-doc so we can reuse logic
+    # 2. script that will actually run INSIDE tmux
+    #    it:
+    #    - rebuilds the command prefix
+    #    - reads the tmpfile lines
+    #    - creates panes and sends commands
     local worker='
         base_cmd_marker=__BASE_CMD_SPLIT__
         tmpfile_marker=__TMPFILE_SPLIT__
 
-        # rebuild arrays
+        # reconstruct array and vars
         eval "base_cmd=(${base_cmd_marker})"
         tmpfile="$tmpfile_marker"
 
+        # read hosts/targets
         mapfile -t items < "$tmpfile"
-        # drop blank lines
+
+        # strip blank lines
         cleaned=()
         for l in "${items[@]}"; do
             [[ -z "$l" ]] && continue
@@ -160,29 +180,32 @@ margs() {
         first=1
         for item in "${items[@]}"; do
             if (( first )); then
+                # first target: reuse the current pane
                 tmux send-keys -t "$TMUX_PANE" "$(printf "%q " "${base_cmd[@]}" "$item")" C-m
                 first=0
             else
-                tmux split-window -t "$TMUX_PANE" -v
+                # all others: new pane
+                tmux split-window -v
                 tmux send-keys "$(printf "%q " "${base_cmd[@]}" "$item")" C-m
                 tmux select-layout tiled >/dev/null 2>&1
             fi
         done
+
         tmux select-layout tiled >/dev/null 2>&1
     '
 
-    # are we already in tmux?
     if [[ -n "$TMUX" ]]; then
-        # we're inside tmux, just run worker now
+        # already in tmux, run worker now in this tmux
         eval "${worker//__BASE_CMD_SPLIT__/$(printf '%q ' "${base_cmd[@]}")//__TMPFILE_SPLIT__/$tmpfile}"
     else
-        # not in tmux, start a session that runs worker
+        # not in tmux:
+        # start a brand new tmux session that immediately runs the worker
         tmux new-session zsh -c \
             "$(printf '%s' "$worker" \
                 | sed "s|__BASE_CMD_SPLIT__|$(printf '%q ' "${base_cmd[@]}")|g" \
                 | sed "s|__TMPFILE_SPLIT__|$tmpfile|g" )"
     fi
 
-    # cleanup
+    # 3. clean up
     rm -f "$tmpfile"
 }
