@@ -35,66 +35,58 @@ mrun() {
     fi
 
     # Build the remote command string safely
-    # We single-quote each arg and escape any existing single quotes
+    # Wrap each arg in single quotes and escape internal quotes
     local remote_cmd=""
+    local c escaped
     for c in "${cmd[@]}"; do
-        local escaped=${c//\'/\'"\'"\'}
+        escaped=${c//\'/\'"\'"\'}
         remote_cmd+="'$escaped' "
     done
 
-    # Helper to send a command to a tmux pane
-    tmux_send() {
-        local pane="$1"
-        shift
-        tmux send-keys -t "$pane" "$@" C-m
-    }
+    # We are going to either:
+    #   - create a new tmux window in the current session, or
+    #   - create a new detached session
+    #
+    # We always capture the window_id and pane_ids so we can target exactly.
+    local window_id session_name first_pane new_pane i
 
-    # Are we already inside tmux?
     if [[ -n "$TMUX" ]]; then
-        # We're in a tmux client already.
-        # Use the current window, kill all panes but the current one first
-        # so we start clean.
-        local cur_win
-        cur_win=$(tmux display-message -p '#{window_id}')
+        # already in tmux
+        # create a brand new window and get its window_id
+        window_id=$(tmux new-window -P -F '#{window_id}' -n "mrun")
+        # first (only) pane in that new window
+        first_pane=$(tmux list-panes -t "$window_id" -F '#{pane_id}' | head -n1)
 
-        # kill all panes in this window except the active one
-        local active_pane
-        active_pane=$(tmux display-message -p '#{pane_id}')
-        for p in $(tmux list-panes -F '#{pane_id}'); do
-            if [[ $p != "$active_pane" ]]; then
-                tmux kill-pane -t "$p"
-            fi
-        done
+        # run first host in first pane
+        tmux send-keys -t "$first_pane" "ssh ${hosts[1]} ${remote_cmd}" C-m
 
-        # run first host in active pane, then create new panes for others
-        tmux_send "$active_pane" "ssh ${hosts[1]} ${remote_cmd}"
-
-        local i
+        # create more panes for remaining hosts
         for ((i=2; i<=${#hosts[@]}; i++)); do
-            tmux split-window -t "$cur_win" -v
-            tmux_send "$cur_win".+ "ssh ${hosts[i]} ${remote_cmd}"
-            tmux select-layout -t "$cur_win" tiled >/dev/null
+            # split the active pane in this window, get the new pane id
+            new_pane=$(tmux split-window -t "$window_id" -v -P -F '#{pane_id}')
+            tmux send-keys -t "$new_pane" "ssh ${hosts[i]} ${remote_cmd}" C-m
+            tmux select-layout -t "$window_id" tiled >/dev/null
         done
 
-        tmux select-layout -t "$cur_win" tiled >/dev/null
-        return 0
+        # make sure we are now looking at that new window
+        tmux select-window -t "$window_id"
+        tmux select-layout -t "$window_id" tiled >/dev/null
+    else
+        # not in tmux
+        # create a brand new detached session and grab its window_id
+        session_name="mrun-$$"
+        window_id=$(tmux new-session -d -s "$session_name" -P -F '#{window_id}')
+        first_pane=$(tmux list-panes -t "$window_id" -F '#{pane_id}' | head -n1)
+
+        tmux send-keys -t "$first_pane" "ssh ${hosts[1]} ${remote_cmd}" C-m
+
+        for ((i=2; i<=${#hosts[@]}; i++)); do
+            new_pane=$(tmux split-window -t "$window_id" -v -P -F '#{pane_id}')
+            tmux send-keys -t "$new_pane" "ssh ${hosts[i]} ${remote_cmd}" C-m
+            tmux select-layout -t "$window_id" tiled >/dev/null
+        done
+
+        tmux select-layout -t "$window_id" tiled >/dev/null
+        tmux attach-session -t "$session_name"
     fi
-
-    # Not in tmux: create a brand new session
-    local session="mrun-$$"
-
-    # create session with first host
-    tmux new-session -d -s "$session" \
-        "ssh ${hosts[1]} ${remote_cmd}"
-
-    # add panes for rest of hosts
-    local i
-    for ((i=2; i<=${#hosts[@]}; i++)); do
-        tmux split-window -t "$session":0 -v
-        tmux send-keys -t "$session":0.+ "ssh ${hosts[i]} ${remote_cmd}" C-m
-        tmux select-layout -t "$session":0 tiled >/dev/null
-    done
-
-    tmux select-layout -t "$session":0 tiled >/dev/null
-    tmux attach-session -t "$session"
 }
