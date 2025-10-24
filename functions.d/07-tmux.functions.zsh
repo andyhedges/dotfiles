@@ -121,3 +121,68 @@ mssh() {
         tmux attach-session -t "$session_name"
     fi
 }
+
+margs() {
+    if [[ $# -lt 1 ]]; then
+        print "margs: need a command, e.g. 'margs ssh'" >&2
+        return 1
+    fi
+    local base_cmd=("$@")
+
+    # read stdin once and stash it so we can reinvoke inside tmux if needed
+    local tmpfile
+    tmpfile=$(mktemp /tmp/margs.XXXXXX) || { print "mktemp failed" >&2; return 1; }
+    cat > "$tmpfile"
+
+    # define an inner worker as a here-doc so we can reuse logic
+    local worker='
+        base_cmd_marker=__BASE_CMD_SPLIT__
+        tmpfile_marker=__TMPFILE_SPLIT__
+
+        # rebuild arrays
+        eval "base_cmd=(${base_cmd_marker})"
+        tmpfile="$tmpfile_marker"
+
+        mapfile -t items < "$tmpfile"
+        # drop blank lines
+        cleaned=()
+        for l in "${items[@]}"; do
+            [[ -z "$l" ]] && continue
+            cleaned+=("$l")
+        done
+        items=("${cleaned[@]}")
+
+        if [[ ${#items[@]} -eq 0 ]]; then
+            print "margs: no input" >&2
+            exit 1
+        fi
+
+        first=1
+        for item in "${items[@]}"; do
+            if (( first )); then
+                tmux send-keys -t "$TMUX_PANE" "$(printf "%q " "${base_cmd[@]}" "$item")" C-m
+                first=0
+            else
+                tmux split-window -t "$TMUX_PANE" -v
+                tmux send-keys "$(printf "%q " "${base_cmd[@]}" "$item")" C-m
+                tmux select-layout tiled >/dev/null 2>&1
+            fi
+        done
+        tmux select-layout tiled >/dev/null 2>&1
+    '
+
+    # are we already in tmux?
+    if [[ -n "$TMUX" ]]; then
+        # we're inside tmux, just run worker now
+        eval "${worker//__BASE_CMD_SPLIT__/$(printf '%q ' "${base_cmd[@]}")//__TMPFILE_SPLIT__/$tmpfile}"
+    else
+        # not in tmux, start a session that runs worker
+        tmux new-session zsh -c \
+            "$(printf '%s' "$worker" \
+                | sed "s|__BASE_CMD_SPLIT__|$(printf '%q ' "${base_cmd[@]}")|g" \
+                | sed "s|__TMPFILE_SPLIT__|$tmpfile|g" )"
+    fi
+
+    # cleanup
+    rm -f "$tmpfile"
+}
