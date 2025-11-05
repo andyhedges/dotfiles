@@ -28,8 +28,7 @@ dotrefresh() {
   dotupdate 
   install_deps 
   install_fonts 
-
-  exec zsh -l
+  exec zsh -l 2>/dev/null
 }
 
 

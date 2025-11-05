@@ -1,13 +1,5 @@
-setopt NO_CHECK_JOBS NO_NOTIFY
-zsh ~/.dotfiles/banner.zsh
 
-# Skip hook wiring only during a refresh handoff
-if [[ -z ${DOTREFRESH:-} ]]; then
-  add-zsh-hook precmd _mise_hook
-  add-zsh-hook precmd _prompt_precmd
-  add-zsh-hook preexec _timer_preexec
-fi
-unset DOTREFRESH
+zsh ~/.dotfiles/banner.zsh
 
 # --- Paths --------------------------------------------------------------
 export PATH="$HOME/.local/bin:$HOME/bin:/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
