@@ -41,7 +41,8 @@ dotrefresh() {
   # optional: if you want to skip hooks during the handoff
   export DOTREFRESH=1
 
-  exec zsh -l 2>/dev/null
+  # hand off to a fresh login shell, dropping only the old shell's stderr noise
+  exec </dev/tty >/dev/tty 2>/dev/null zsh -l
 }
 
 
