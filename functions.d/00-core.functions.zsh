@@ -124,6 +124,11 @@ dotrefresh() {
   install_deps || true
   install_fonts || true        # don’t leak a non-zero into the restart
   unset __timer            # avoid showing a bogus elapsed time on first prompt
+
+  emulate -L zsh
+  unsetopt monitor notify check_jobs 2>/dev/null || true
+  disown -a 2>/dev/null || true
+
   exec zsh -l              # replace the shell; no return
 }
 
