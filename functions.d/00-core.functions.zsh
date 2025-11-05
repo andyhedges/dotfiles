@@ -8,20 +8,20 @@ NERD_FONTS=(
 
 dotupdate() {
   local repo="$HOME/.dotfiles"
+
   if [[ ! -d "$repo/.git" ]]; then
     printf '%s\n' "No dotfiles repo at $repo" "Clone it with:" \
       "  git clone https://github.com/andyhedges/dotfiles.git \"$repo\""
     return 2
   fi
+
   printf '%s\n' "Updating dotfiles..."
 
-  (
+  if (
     emulate -L zsh
-    unsetopt monitor notify 2>/dev/null || true
+    unsetopt monitor notify check_jobs 2>/dev/null || true
     command /usr/bin/git -C "$repo" pull --quiet --ff-only
-  )
-
-  if [[ $? -eq 0 ]]; then
+  ); then
     printf '%s\n' "Dotfiles up to date."
     return 0
   else
@@ -33,15 +33,16 @@ dotupdate() {
 dotrefresh() {
   dotupdate || true
   install_deps || true
-  install_fonts || true        # don’t leak a non-zero into the restart
-  unset __timer            # avoid showing a bogus elapsed time on first prompt
+  install_fonts || true
+  unset __timer
 
   emulate -L zsh
   unsetopt monitor notify check_jobs 2>/dev/null || true
   disown -a 2>/dev/null || true
 
-  exec zsh -l              # replace the shell; no return
+  exec zsh -l
 }
+
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
