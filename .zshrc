@@ -1,4 +1,4 @@
-
+setopt NO_CHECK_JOBS NO_NOTIFY
 zsh ~/.dotfiles/banner.zsh
 
 # Skip hook wiring only during a refresh handoff
