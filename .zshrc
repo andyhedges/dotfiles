@@ -1,3 +1,13 @@
+# --- Basic setup ----------------------------------------------------------
+setopt prompt_subst          # allow ${...} in PROMPT/RPROMPT to expand
+
+autoload -Uz compinit promptinit colors vcs_info add-zsh-hook
+compinit
+promptinit
+colors
+
+zmodload zsh/datetime || true   # ensure EPOCHREALTIME works
+
 
 zsh ~/.dotfiles/banner.zsh
 
@@ -14,15 +24,7 @@ fi
 
 LC_CTYPE="en_US.UTF-8"
 
-# --- Basic setup ----------------------------------------------------------
-setopt prompt_subst          # allow ${...} in PROMPT/RPROMPT to expand
 
-autoload -Uz compinit promptinit colors vcs_info add-zsh-hook
-compinit
-promptinit
-colors
-
-zmodload zsh/datetime || true   # ensure EPOCHREALTIME works
 
 # --- vcs_info (git branch display) ---------------------------------------
 zstyle ':vcs_info:git:*' formats '%F{yellow} %b%f'
