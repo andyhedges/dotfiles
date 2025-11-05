@@ -31,6 +31,7 @@ dotupdate() {
 }
 
 dotrefresh() {
+  export DOTREFRESH=1
   dotupdate || true
   install_deps || true
   install_fonts || true
