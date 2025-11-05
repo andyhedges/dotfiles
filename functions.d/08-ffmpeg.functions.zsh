@@ -10,7 +10,7 @@ ff50() {
   local outfile="${infile%.*}_processed.${infile##*.}"
 
   ffmpeg -i "$infile" \
-    -c:v h264_videotoolbox -b:v 50M -maxrate 50M -bufsize 100M -tag:v hvc1 \
+    -c:v h264_videotoolbox -b:v 50M -maxrate 50M -bufsize 100M \
     -pix_fmt yuv420p -c:a copy -movflags +faststart \
     "$outfile"
 }
