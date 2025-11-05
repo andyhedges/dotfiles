@@ -15,11 +15,7 @@ dotupdate() {
   fi
   printf '%s\n' "Updating dotfiles..."
 
-  if (
-    emulate -L zsh
-    unsetopt monitor notify check_jobs 2>/dev/null || true
-    command /usr/bin/git -C "$repo" pull --quiet --ff-only
-  ); then
+  if (command /usr/bin/git -C "$repo" pull --quiet --ff-only); then
     printf '%s\n' "Dotfiles up to date."
     return 0
   else
@@ -29,20 +25,11 @@ dotupdate() {
 }
 
 dotrefresh() {
-  dotupdate || true
-  install_deps || true
-  install_fonts || true
-  unset __timer
+  dotupdate 
+  install_deps 
+  install_fonts 
 
-  emulate -L zsh
-  unsetopt monitor notify check_jobs 2>/dev/null || true
-  disown -a 2>/dev/null || true
-
-  # optional: if you want to skip hooks during the handoff
-  export DOTREFRESH=1
-
-  # hand off to a fresh login shell, dropping only the old shell's stderr noise
-  exec </dev/tty >/dev/tty 2>/dev/null zsh -l
+  exec zsh -l
 }
 
 
