@@ -14,13 +14,33 @@ dotupdate() {
     return 2
   fi
   printf '%s\n' "Updating dotfiles..."
-  if git -C "$repo" pull --quiet --ff-only; then
+
+  (
+    emulate -L zsh
+    unsetopt monitor notify 2>/dev/null || true
+    command /usr/bin/git -C "$repo" pull --quiet --ff-only
+  )
+
+  if [[ $? -eq 0 ]]; then
     printf '%s\n' "Dotfiles up to date."
     return 0
   else
     printf '%s\n' "Update failed. Resolve manually: cd \"$repo\" && git status"
     return 1
   fi
+}
+
+dotrefresh() {
+  dotupdate || true
+  install_deps || true
+  install_fonts || true        # don’t leak a non-zero into the restart
+  unset __timer            # avoid showing a bogus elapsed time on first prompt
+
+  emulate -L zsh
+  unsetopt monitor notify check_jobs 2>/dev/null || true
+  disown -a 2>/dev/null || true
+
+  exec zsh -l              # replace the shell; no return
 }
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
@@ -117,19 +137,6 @@ install_fonts(){
     echo "=== Refreshing font cache ==="
     fc-cache -fv >/dev/null 2>&1 || true
   fi
-}
-
-dotrefresh() {
-  dotupdate || true
-  install_deps || true
-  install_fonts || true        # don’t leak a non-zero into the restart
-  unset __timer            # avoid showing a bogus elapsed time on first prompt
-
-  emulate -L zsh
-  unsetopt monitor notify check_jobs 2>/dev/null || true
-  disown -a 2>/dev/null || true
-
-  exec zsh -l              # replace the shell; no return
 }
 
 
