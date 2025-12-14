@@ -60,20 +60,25 @@ EOF
 
   [[ -n "$input" && -n "$target" ]] || { show_help; return 2; }
   [[ -f "$input" ]] || { print -u2 "Input not found: $input"; return 2; }
-  command -v ffmpeg  >/dev/null || { print -u2 "ffmpeg not found"; return 2; }
-  command -v ffprobe >/dev/null || { print -u2 "ffprobe not found"; return 2; }
 
+  command -v ffmpeg  >/dev/null || { print -u2 "ffmpeg not found (brew install ffmpeg)"; return 2; }
+  command -v ffprobe >/dev/null || { print -u2 "ffprobe not found (brew install ffmpeg)"; return 2; }
+
+  # Detect current video codec (first video stream)
   local cur_codec
   cur_codec="$(ffprobe -v error -select_streams v:0 \
     -show_entries stream=codec_name -of default=nw=1:nk=1 "$input")"
   [[ -n "$cur_codec" ]] || { print -u2 "Could not detect video codec"; return 1; }
 
+  # Duration in seconds (float) for percentage calculation
   local duration
   duration="$(ffprobe -v error -show_entries format=duration \
     -of default=nw=1:nk=1 "$input")"
 
+  # Default output path
   [[ -n "$output" ]] || output="${input:h}/${input:t:r}.${target}.mkv"
 
+  # No-op if already in target codec
   if [[ "$cur_codec" == "$target" ]]; then
     if [[ "$output" != "$input" ]]; then
       cp -p "$input" "$output"
@@ -86,6 +91,7 @@ EOF
     return 0
   fi
 
+  # Default encoder for the target codec if not provided
   if [[ -z "$encoder" ]]; then
     case "$target" in
       h264) encoder="libx264" ;;
@@ -96,12 +102,13 @@ EOF
     esac
   fi
 
+  # Split encoder args string into an array
   local -a enc_args_arr
   [[ -n "$enc_args" ]] && enc_args_arr=(${=enc_args}) || enc_args_arr=()
 
+  # Progress bar helpers
   local start=$(date +%s)
   local width=30
-
   draw_bar() {
     local pct=$1
     (( pct < 0 )) && pct=0
@@ -117,42 +124,35 @@ EOF
   print "Video: $cur_codec → $target (encoder: $encoder)"
   print -n "Progress: "
 
-  # Parse -progress output from FD 3 (no pipeline, stderr remains visible)
-  {
-    local out_us=0 sec=0 elapsed=0 pct=""
-    while IFS='=' read -r key val; do
-      case "$key" in
-        out_time_us)
-          out_us=$val
-          sec=$(( out_us / 1000000 ))
-          elapsed=$(( $(date +%s) - start ))
+  # Run ffmpeg. Progress KV pairs go to stdout and are consumed by the parser.
+  # ffmpeg logs stay on stderr so you still see real errors.
+  ffmpeg -hide_banner -y \
+    -i "$input" \
+    -map 0 -map_metadata 0 \
+    -c copy \
+    -c:v:0 "$encoder" "${enc_args_arr[@]}" \
+    -progress pipe:1 -nostats \
+    "$output" 2> >(cat >&2) | \
+  while IFS='=' read -r key val; do
+    case "$key" in
+      out_time_us)
+        local sec=$(( val / 1000000 ))
+        local elapsed=$(( $(date +%s) - start ))
+        if [[ -n "$duration" && "$duration" != "N/A" ]]; then
+          local pct
+          pct="$(printf "%.0f" "$(echo "$sec*100/$duration" | bc -l 2>/dev/null)")"
+          [[ -n "$pct" ]] && printf "\r%s  elapsed %3ds" "$(draw_bar "$pct")" "$elapsed"
+        else
+          printf "\rtime %5ds  elapsed %3ds" "$sec" "$elapsed"
+        fi
+        ;;
+      progress)
+        [[ "$val" == "end" ]] && printf "\r%s  done\n" "$(draw_bar 100)"
+        ;;
+    esac
+  done
 
-          if [[ -n "$duration" && "$duration" != "N/A" ]]; then
-            pct="$(printf "%.0f" "$(echo "$sec*100/$duration" | bc -l 2>/dev/null)")"
-            [[ -n "$pct" ]] && printf "\r%s  elapsed %3ds" "$(draw_bar "$pct")" "$elapsed"
-          else
-            printf "\rtime %5ds  elapsed %3ds" "$sec" "$elapsed"
-          fi
-          ;;
-        progress)
-          if [[ "$val" == "end" ]]; then
-            printf "\r%s  done\n" "$(draw_bar 100)"
-          fi
-          ;;
-      esac
-    done
-  } 3< <(
-    ffmpeg -hide_banner -y \
-      -i "$input" \
-      -map 0 -map_metadata 0 \
-      -c copy \
-      -c:v:0 "$encoder" "${enc_args_arr[@]}" \
-      -progress pipe:3 -nostats \
-      "$output" \
-      3>&1 1>/dev/null
-  )
-
-  local rc=$?
+  local rc=${pipestatus[1]}
   if (( rc != 0 )); then
     echo
     rm -f -- "$output"
@@ -162,4 +162,3 @@ EOF
 
   print -r -- "$output"
 }
-
