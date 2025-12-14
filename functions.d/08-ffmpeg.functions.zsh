@@ -63,22 +63,23 @@ EOF
 
   command -v ffmpeg  >/dev/null || { print -u2 "ffmpeg not found (brew install ffmpeg)"; return 2; }
   command -v ffprobe >/dev/null || { print -u2 "ffprobe not found (brew install ffmpeg)"; return 2; }
+  command -v bc      >/dev/null || { print -u2 "bc not found (should be on macOS)"; return 2; }
 
-  # Detect current video codec (first video stream)
+  # Detect current codec
   local cur_codec
   cur_codec="$(ffprobe -v error -select_streams v:0 \
     -show_entries stream=codec_name -of default=nw=1:nk=1 "$input")"
   [[ -n "$cur_codec" ]] || { print -u2 "Could not detect video codec"; return 1; }
 
-  # Duration in seconds (float) for percentage calculation
+  # Duration for percentage
   local duration
   duration="$(ffprobe -v error -show_entries format=duration \
     -of default=nw=1:nk=1 "$input")"
 
-  # Default output path
+  # Default output
   [[ -n "$output" ]] || output="${input:h}/${input:t:r}.${target}.mkv"
 
-  # No-op if already in target codec
+  # No-op
   if [[ "$cur_codec" == "$target" ]]; then
     if [[ "$output" != "$input" ]]; then
       cp -p "$input" "$output"
@@ -91,7 +92,7 @@ EOF
     return 0
   fi
 
-  # Default encoder for the target codec if not provided
+  # Default encoder
   if [[ -z "$encoder" ]]; then
     case "$target" in
       h264) encoder="libx264" ;;
@@ -102,7 +103,7 @@ EOF
     esac
   fi
 
-  # Split encoder args string into an array
+  # Encoder args array
   local -a enc_args_arr
   [[ -n "$enc_args" ]] && enc_args_arr=(${=enc_args}) || enc_args_arr=()
 
@@ -120,26 +121,45 @@ EOF
       "$pct"
   }
 
+  # Progress plumbing (file + fifo) to ensure KVs never hit the console
+  local prog_file fifo
+  prog_file="$(mktemp -t ffmpeg_progress.XXXXXX)" || { print -u2 "mktemp failed"; return 2; }
+  fifo="$(mktemp -t ffmpeg_fifo.XXXXXX)" || { rm -f "$prog_file"; print -u2 "mktemp failed"; return 2; }
+  rm -f "$fifo"
+  mkfifo "$fifo" || { rm -f "$prog_file"; print -u2 "mkfifo failed"; return 2; }
+
+  cleanup() {
+    rm -f -- "$prog_file" "$fifo"
+  }
+  trap cleanup EXIT
+
   print "Transcoding → $output"
   print "Video: $cur_codec → $target (encoder: $encoder)"
   print -n "Progress: "
 
-  # Run ffmpeg. Progress KV pairs go to stdout and are consumed by the parser.
-  # ffmpeg logs stay on stderr so you still see real errors.
+  # Tail the progress file into the fifo
+  tail -n 0 -f "$prog_file" > "$fifo" &
+  local tail_pid=$!
+
+  # Start ffmpeg: progress to file, stdout silenced, stderr kept visible
   ffmpeg -hide_banner -y \
     -i "$input" \
     -map 0 -map_metadata 0 \
     -c copy \
     -c:v:0 "$encoder" "${enc_args_arr[@]}" \
-    -progress pipe:1 -nostats \
-    "$output" 2> >(cat >&2) | \
+    -progress "$prog_file" -nostats \
+    "$output" 1>/dev/null &
+  local ff_pid=$!
+
+  # Parse the fifo and render progress
+  local sec elapsed pct
   while IFS='=' read -r key val; do
     case "$key" in
       out_time_us)
-        local sec=$(( val / 1000000 ))
-        local elapsed=$(( $(date +%s) - start ))
+        sec=$(( val / 1000000 ))
+        elapsed=$(( $(date +%s) - start ))
+
         if [[ -n "$duration" && "$duration" != "N/A" ]]; then
-          local pct
           pct="$(printf "%.0f" "$(echo "$sec*100/$duration" | bc -l 2>/dev/null)")"
           [[ -n "$pct" ]] && printf "\r%s  elapsed %3ds" "$(draw_bar "$pct")" "$elapsed"
         else
@@ -147,14 +167,20 @@ EOF
         fi
         ;;
       progress)
-        [[ "$val" == "end" ]] && printf "\r%s  done\n" "$(draw_bar 100)"
+        if [[ "$val" == "end" ]]; then
+          printf "\r%s  done\n" "$(draw_bar 100)"
+          break
+        fi
         ;;
     esac
-  done
+  done < "$fifo"
 
-  local rc=${pipestatus[1]}
+  # Stop tail, wait ffmpeg
+  kill "$tail_pid" 2>/dev/null
+  wait "$ff_pid"
+  local rc=$?
+
   if (( rc != 0 )); then
-    echo
     rm -f -- "$output"
     print -u2 "ffmpeg failed (exit $rc). Output removed: $output"
     return $rc
