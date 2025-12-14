@@ -101,6 +101,7 @@ EOF
 
   local start=$(date +%s)
   local width=30
+
   draw_bar() {
     local pct=$1
     (( pct < 0 )) && pct=0
@@ -112,21 +113,33 @@ EOF
       "$pct"
   }
 
-  # Progress parser runs via FD 3, so ffmpeg is not in a pipeline.
-  # Stderr remains real stderr, so you will SEE the actual failure reason.
-  {
-    while IFS='=' read -r key val; do
-      [[ "$key" == "out_time_ms" ]] || continue
-      local sec=$(( val / 1000000 ))
-      local elapsed=$(( $(date +%s) - start ))
+  print "Transcoding → $output"
+  print "Video: $cur_codec → $target (encoder: $encoder)"
+  print -n "Progress: "
 
-      if [[ -n "$duration" && "$duration" != "N/A" ]]; then
-        local pct
-        pct="$(printf "%.0f" "$(echo "$sec*100/$duration" | bc -l 2>/dev/null)")"
-        [[ -n "$pct" ]] && printf "\r%s  elapsed %3ds" "$(draw_bar "$pct")" "$elapsed"
-      else
-        printf "\rtime %5ds  elapsed %3ds" "$sec" "$elapsed"
-      fi
+  # Parse -progress output from FD 3 (no pipeline, stderr remains visible)
+  {
+    local out_us=0 sec=0 elapsed=0 pct=""
+    while IFS='=' read -r key val; do
+      case "$key" in
+        out_time_us)
+          out_us=$val
+          sec=$(( out_us / 1000000 ))
+          elapsed=$(( $(date +%s) - start ))
+
+          if [[ -n "$duration" && "$duration" != "N/A" ]]; then
+            pct="$(printf "%.0f" "$(echo "$sec*100/$duration" | bc -l 2>/dev/null)")"
+            [[ -n "$pct" ]] && printf "\r%s  elapsed %3ds" "$(draw_bar "$pct")" "$elapsed"
+          else
+            printf "\rtime %5ds  elapsed %3ds" "$sec" "$elapsed"
+          fi
+          ;;
+        progress)
+          if [[ "$val" == "end" ]]; then
+            printf "\r%s  done\n" "$(draw_bar 100)"
+          fi
+          ;;
+      esac
     done
   } 3< <(
     ffmpeg -hide_banner -y \
@@ -140,10 +153,8 @@ EOF
   )
 
   local rc=$?
-  echo
-
   if (( rc != 0 )); then
-    # Remove the empty or partial file to avoid confusion
+    echo
     rm -f -- "$output"
     print -u2 "ffmpeg failed (exit $rc). Output removed: $output"
     return $rc
@@ -151,3 +162,4 @@ EOF
 
   print -r -- "$output"
 }
+
