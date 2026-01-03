@@ -1,4 +1,4 @@
-grep() {
+grepn() {
   if [[ -t 1 ]]; then
     command grep -n --color=auto "$@"
   else
