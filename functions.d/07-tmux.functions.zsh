@@ -1,4 +1,13 @@
 mrun() {
+    # Run a command over SSH on multiple hosts in a tiled tmux window/session.
+    if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
+        cat >&2 <<'EOF'
+usage: mrun <host1> <host2> ... -- <command...>
+
+Run a command over SSH on multiple hosts in a tiled tmux window/session.
+EOF
+        return 1
+    fi
     if [[ $# -lt 2 ]]; then
         echo "usage: mrun <host1> <host2> ... -- <command...>" >&2
         return 1
@@ -82,6 +91,15 @@ mrun() {
 }
 
 mssh() {
+    # Open parallel SSH sessions to multiple hosts in a tiled tmux window/session.
+    if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
+        cat >&2 <<'EOF'
+usage: mssh <host1> <host2> <host3> ...
+
+Open parallel SSH sessions to multiple hosts in a tiled tmux window/session.
+EOF
+        return 1
+    fi
     if [[ $# -lt 1 ]]; then
         echo "usage: mssh <host1> <host2> <host3> ..." >&2
         return 1
@@ -121,4 +139,3 @@ mssh() {
         tmux attach-session -t "$session_name"
     fi
 }
-
