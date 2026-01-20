@@ -45,6 +45,8 @@ install_deps(){
   brew_install_if_missing eza
   brew_install_if_missing fzf
   brew_install_if_missing jq
+  brew_install_if_missing tmux
+  brew_install_if_missing kubectl
 
   FONT_DIR="$HOME/Library/Fonts"
   mkdir -p "$FONT_DIR"
