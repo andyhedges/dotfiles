@@ -9,19 +9,23 @@ colors
 zmodload zsh/datetime || true   # ensure EPOCHREALTIME works
 
 
-source ~/.dotfiles/banner.zsh
+[[ -r "$HOME/.dotfiles/banner.zsh" ]] && source "$HOME/.dotfiles/banner.zsh"
 
 # --- Paths --------------------------------------------------------------
 export PATH="$HOME/.local/bin:$HOME/bin:/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
 
 # --- Auto-update dotfiles occasionally (every 7 days) ---------------------
-if [ -d "$HOME/.dotfiles/.git" ]; then
-  if find "$HOME/.dotfiles/.git" -mtime +7 -print -quit | grep -q .; then
+if [[ -d "$HOME/.dotfiles/.git" ]] && command -v git >/dev/null 2>&1; then
+  _dotfiles_state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles"
+  _dotfiles_update_stamp="$_dotfiles_state_dir/last-update"
+  if [[ ! -f "$_dotfiles_update_stamp" ]] || find "$_dotfiles_update_stamp" -mtime +7 -print -quit | grep -q .; then
+    mkdir -p "$_dotfiles_state_dir" 2>/dev/null && touch "$_dotfiles_update_stamp" 2>/dev/null
     git -C "$HOME/.dotfiles" pull --quiet --ff-only &>/dev/null &!
   fi
+  unset _dotfiles_state_dir _dotfiles_update_stamp
 fi
 
-LC_CTYPE="en_US.UTF-8"
+export LC_CTYPE="en_US.UTF-8"
 
 
 

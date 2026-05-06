@@ -1,6 +1,6 @@
 #-- Dotfiles update and refresh functions ------------------------------------
 
-log() { echo -e "\033[0;32m==>\033[0m $*"; }
+log() { printf '\033[0;32m==>\033[0m %s\n' "$*"; }
 
 NERD_FONTS=(
   "JetBrainsMono"
@@ -15,7 +15,7 @@ dotupdate() {
   fi
   printf '%s\n' "Updating dotfiles..."
 
-  if (command /usr/bin/git -C "$repo" pull --quiet --ff-only); then
+  if command git -C "$repo" pull --quiet --ff-only; then
     printf '%s\n' "Dotfiles up to date."
     return 0
   else
@@ -26,8 +26,8 @@ dotupdate() {
 
 dotrefresh() {
   dotupdate || true
-  install_deps 
-  install_fonts 
+  install_deps || return
+  install_fonts || return
   exec zsh -l 2>/dev/null
 }
 
@@ -35,11 +35,24 @@ dotrefresh() {
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
 install_deps(){
+  if [[ "$OSTYPE" != darwin* ]]; then
+    echo "install_deps currently supports macOS with Homebrew."
+    return 2
+  fi
+
   echo "=== Checking Homebrew ==="
   if ! have_cmd brew; then
     echo "Homebrew not found, installing..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+      eval "$(/usr/local/bin/brew shellenv)"
+    fi
+  fi
+  if ! have_cmd brew; then
+    echo "Homebrew is not available on PATH after installation." >&2
+    return 1
   fi
 
   brew_install_if_missing eza
@@ -48,15 +61,15 @@ install_deps(){
   brew_install_if_missing tmux
   brew_install_if_missing kubectl
 
-  FONT_DIR="$HOME/Library/Fonts"
+  FONT_DIR="${FONT_DIR:-$HOME/Library/Fonts}"
   mkdir -p "$FONT_DIR"
 }
 
 brew_install_if_missing() {
   local pkg="$1"
-  if ! have_cmd $pkg; then
-    brew install --quiet $pkg
-  elif brew list --formula | grep -q "^$pkg\$"; then
+  if ! have_cmd "$pkg"; then
+    brew install --quiet "$pkg"
+  elif brew list --formula "$pkg" >/dev/null 2>&1; then
     log "$pkg is already installed via Homebrew."
   else
     log "$pkg is already installed."
@@ -98,36 +111,65 @@ font_installed() {
 
 install_font() {
   local font="$1"
+  local font_dir="${FONT_DIR:-$HOME/Library/Fonts}"
+
   if font_installed "$font"; then
     log "$font Nerd Font already installed"
     return 1
   fi
 
+  mkdir -p "$font_dir" || return 2
   log "Installing $font Nerd Font..."
   local tmpdir
-  tmpdir=$(mktemp -d)
-  curl -fsSL -o "$tmpdir/$font.zip" \
-    "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.zip"
-  unzip -qq "$tmpdir/$font.zip" -d "$tmpdir/$font"
-  cp "$tmpdir/$font"/*.ttf "$FONT_DIR"/
+  tmpdir=$(mktemp -d) || return 2
+  if ! curl -fsSL -o "$tmpdir/$font.zip" \
+    "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.zip"; then
+    rm -rf "$tmpdir"
+    return 2
+  fi
+  if ! unzip -qq "$tmpdir/$font.zip" -d "$tmpdir/$font"; then
+    rm -rf "$tmpdir"
+    return 2
+  fi
+
+  local -a font_files=( "$tmpdir/$font"/*.(ttf|otf)(N) )
+  if (( ${#font_files} == 0 )); then
+    rm -rf "$tmpdir"
+    printf '%s\n' "No font files found in $font.zip"
+    return 2
+  fi
+
+  if ! cp "${font_files[@]}" "$font_dir"/; then
+    rm -rf "$tmpdir"
+    return 2
+  fi
   rm -rf "$tmpdir"
   log "Installed $font Nerd Font"
   return 0
 }
 
 install_fonts(){
+  if [[ "$OSTYPE" != darwin* ]]; then
+    echo "install_fonts currently supports macOS font directories."
+    return 2
+  fi
+
   echo "=== Checking Nerd Fonts ==="
   local cache_invalid=0
+  local failed=0
   for f in "${NERD_FONTS[@]}"; do
-    if install_font "$f"; then
-      cache_invalid=1
-    fi
+    install_font "$f"
+    case $? in
+      0) cache_invalid=1 ;;
+      1) ;;
+      *) failed=1 ;;
+    esac
   done
 
-  if [ "$changed" -eq 1 ] && command -v fc-cache >/dev/null 2>&1; then
+  if (( cache_invalid == 1 )) && command -v fc-cache >/dev/null 2>&1; then
     echo "=== Refreshing font cache ==="
     fc-cache -fv >/dev/null 2>&1 || true
   fi
+
+  (( failed == 0 ))
 }
-
-

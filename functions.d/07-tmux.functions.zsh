@@ -1,3 +1,8 @@
+_tmux_shell_quote() {
+    emulate -L zsh
+    print -r -- "${(qq)1}"
+}
+
 mrun() {
     # Run a command over SSH on multiple hosts in a tiled tmux window/session.
     if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
@@ -46,10 +51,9 @@ EOF
 
     # quote the remote command safely
     local remote_cmd=""
-    local c escaped
+    local c host_q
     for c in "${cmd[@]}"; do
-        escaped=${c//\'/\'"\'"\'}
-        remote_cmd+="'$escaped' "
+        remote_cmd+="$(_tmux_shell_quote "$c") "
     done
 
     local window_id session_name first_pane new_pane i
@@ -60,12 +64,14 @@ EOF
         first_pane=$(tmux list-panes -t "$window_id" -F '#{pane_id}' | head -n1)
 
         # run first host in first pane
-        tmux send-keys -t "$first_pane" "ssh ${hosts[1]} ${remote_cmd}" C-m
+        host_q=$(_tmux_shell_quote "${hosts[1]}")
+        tmux send-keys -t "$first_pane" "ssh -- $host_q ${remote_cmd}" C-m
 
         # split for the remaining hosts
         for ((i=2; i<=${#hosts[@]}; i++)); do
             new_pane=$(tmux split-window -t "$window_id" -v -P -F '#{pane_id}')
-            tmux send-keys -t "$new_pane" "ssh ${hosts[i]} ${remote_cmd}" C-m
+            host_q=$(_tmux_shell_quote "${hosts[i]}")
+            tmux send-keys -t "$new_pane" "ssh -- $host_q ${remote_cmd}" C-m
             tmux select-layout -t "$window_id" tiled >/dev/null
         done
 
@@ -77,11 +83,13 @@ EOF
         window_id=$(tmux new-session -d -s "$session_name" -P -F '#{window_id}')
         first_pane=$(tmux list-panes -t "$window_id" -F '#{pane_id}' | head -n1)
 
-        tmux send-keys -t "$first_pane" "ssh ${hosts[1]} ${remote_cmd}" C-m
+        host_q=$(_tmux_shell_quote "${hosts[1]}")
+        tmux send-keys -t "$first_pane" "ssh -- $host_q ${remote_cmd}" C-m
 
         for ((i=2; i<=${#hosts[@]}; i++)); do
             new_pane=$(tmux split-window -t "$window_id" -v -P -F '#{pane_id}')
-            tmux send-keys -t "$new_pane" "ssh ${hosts[i]} ${remote_cmd}" C-m
+            host_q=$(_tmux_shell_quote "${hosts[i]}")
+            tmux send-keys -t "$new_pane" "ssh -- $host_q ${remote_cmd}" C-m
             tmux select-layout -t "$window_id" tiled >/dev/null
         done
 
@@ -106,16 +114,18 @@ EOF
     fi
 
     local hosts=("$@")
-    local window_id session_name i
+    local window_id session_name i host_q
 
     if [[ -n "$TMUX" ]]; then
         # You are already in tmux
         # Create a brand new window that runs ssh to the first host
-        window_id=$(tmux new-window -P -F '#{window_id}' -n "mssh" "ssh ${hosts[1]}")
+        host_q=$(_tmux_shell_quote "${hosts[1]}")
+        window_id=$(tmux new-window -P -F '#{window_id}' -n "mssh" "ssh -- $host_q")
 
         # For each remaining host, split and start ssh in that pane
         for ((i=2; i<=${#hosts[@]}; i++)); do
-            tmux split-window  -t "$window_id" -v -P -F '#{pane_id}' "ssh ${hosts[i]}" >/dev/null
+            host_q=$(_tmux_shell_quote "${hosts[i]}")
+            tmux split-window  -t "$window_id" -v -P -F '#{pane_id}' "ssh -- $host_q" >/dev/null
             tmux select-layout -t "$window_id" tiled >/dev/null
         done
 
@@ -127,11 +137,13 @@ EOF
         # You are not in tmux
         # Create a new detached session where the first pane is already ssh'd in
         session_name="mssh-$$"
-        window_id=$(tmux new-session -d -s "$session_name" -P -F '#{window_id}' "ssh ${hosts[1]}")
+        host_q=$(_tmux_shell_quote "${hosts[1]}")
+        window_id=$(tmux new-session -d -s "$session_name" -P -F '#{window_id}' "ssh -- $host_q")
 
         # Add panes for the rest
         for ((i=2; i<=${#hosts[@]}; i++)); do
-            tmux split-window  -t "$window_id" -v -P -F '#{pane_id}' "ssh ${hosts[i]}" >/dev/null
+            host_q=$(_tmux_shell_quote "${hosts[i]}")
+            tmux split-window  -t "$window_id" -v -P -F '#{pane_id}' "ssh -- $host_q" >/dev/null
             tmux select-layout -t "$window_id" tiled >/dev/null
         done
 

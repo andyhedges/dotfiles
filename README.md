@@ -1,38 +1,40 @@
 # dotfiles
 
-Personal zsh configuration, aliases, and shell utilities.  
-Designed to be fast, minimal, and reproducible across machines.
+Personal zsh configuration, aliases, and shell utilities.
 
-They are customised to my preferences but you are welcome to use or modify (see LICENSE for more info).
+The setup is designed to stay small, quick to load, and reproducible across machines. It is customized to my preferences, but you are welcome to use or modify it under the terms of the license.
 
-Please feel free to make suggestions via pull requests or 'issues'.
+## Contents
 
----
+| Path | Purpose |
+| --- | --- |
+| `.zshrc` | Core zsh setup, prompt, history, completion, auto-update, and loaders. |
+| `aliases.d/*.aliases.zsh` | Alias bundles loaded in lexical order. |
+| `functions.d/*.functions.zsh` | Function bundles loaded in lexical order. |
+| `banner.zsh` | Optional login banner with dotfiles branch/update information. |
+| `install.sh` | Bootstrap script that clones or updates the repo and sources it from `~/.zshrc`. |
+| `scripts/check.sh` | Local syntax check for the bash and zsh files. |
 
-## 🧩 Contents
+## Quick Install
 
-| File | Purpose |
-|------|----------|
-| `.zshrc` | Core shell setup (sources aliases/functions, configures history, prompt, etc.) |
-| `.aliases` | Common commands and safe defaults (`ll`, `gs`, `untar`, etc.) |
-| `.functions` | Utility functions (`extract`, `mkcd`, etc.) |
-| `install.sh` | Bootstrap script to install or update the dotfiles automatically |
-
----
-
-## ⚡️ Quick install
-
-This doesn't replace your .zshrc file it simply adds a line to source this .zshrc file after your existing one.
-
-Run this once on any new machine:
+Run this once on a new machine:
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/andyhedges/dotfiles/main/install.sh)"
 ```
 
-Then reload your shell
+The installer clones the repo to `~/.dotfiles`, updates it with `git pull --ff-only` on later runs, and adds a small source block to `~/.zshrc` if one is not already present.
+
+Then reload your shell:
 
 ```bash
 exec zsh
 ```
 
+## Local Checks
+
+```bash
+bash scripts/check.sh
+```
+
+The check script runs `bash -n` for `install.sh` and `zsh -n` for the zsh config, aliases, functions, and banner.
