@@ -75,7 +75,7 @@ _prompt_precmd() {
 add-zsh-hook precmd _prompt_precmd
 
 # --- Prompt (left side) ---------------------------------------------------
-PROMPT='%F{240}%K{240}%F{white} %* %k%F{240} %F{blue}%K{blue}%F{white} %n@%m %k%F{blue}%F{green} %K{green}%F{black} %~ %k%F{green} %(?.%F{green}%f.%F{red}%f) '
+PROMPT='%F{240}%K{240}%F{white} %* %k%F{240} %F{blue}%K{blue}%F{white} %n@%m %k%F{blue}%F{green} %K{green}%F{black} %~ %k%F{green} %(?.%F{green}%f.%F{red}%f)   '
 
 # --- Options -----------------------------------------------------------------
 setopt autocd extendedglob correct no_beep hist_ignore_dups share_history
