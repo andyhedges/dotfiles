@@ -11,6 +11,13 @@ zmodload zsh/datetime || true   # ensure EPOCHREALTIME works
 
 [[ -r "$HOME/.dotfiles/banner.zsh" ]] && source "$HOME/.dotfiles/banner.zsh"
 
+# --- Homebrew ------------------------------------------------------------
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
 # --- Paths --------------------------------------------------------------
 export PATH="$HOME/.local/bin:$HOME/bin:/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
 
@@ -79,6 +86,15 @@ SAVEHIST=50000
 # --- Completion and colors ------------------------------------------------
 zstyle ':completion:*' menu select
 [[ -n ${LS_COLORS-} ]] && zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} || true
+
+# --- Tool integrations ----------------------------------------------------
+if command -v fzf >/dev/null 2>&1; then
+  source <(fzf --zsh)
+fi
+
+if command -v kubectl >/dev/null 2>&1; then
+  source <(kubectl completion zsh)
+fi
 
 # --- Aliases and functions - standardized loaders --------------------------
 # Directory layout

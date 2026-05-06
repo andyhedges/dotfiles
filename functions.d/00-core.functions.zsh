@@ -56,8 +56,10 @@ install_deps(){
   fi
 
   brew_install_if_missing eza
+  brew_install_if_missing fd
   brew_install_if_missing fzf
   brew_install_if_missing jq
+  brew_install_if_missing ripgrep
   brew_install_if_missing tmux
   brew_install_if_missing kubectl
 
