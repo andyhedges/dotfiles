@@ -1,0 +1,1 @@
+test file to verify no pre-commit hook blocks commits
