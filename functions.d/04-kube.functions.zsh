@@ -1,19 +1,24 @@
+# 04-kube.functions.zsh
+unalias kk kctx krestart 2>/dev/null
+
 kk() {
-    if [[ $# -eq 0 || "$1" == -* ]]; then
-        kubectl get all -A "$@"
-        return
-    fi
-    names=()
-    while [[ $# -gt 0 && "$1" != -* ]]; do
-        names+=("$1")
-        shift
-    done
-    extra=("$@")
-    for ns in "${names[@]}"; do
-        echo "===== $ns ====="
-        kubectl get all -n "$ns" "${extra[@]}"
-        echo
-    done
+  if [[ $# -eq 0 || "$1" == -* ]]; then
+    kubectl get all -A "$@"
+    return
+  fi
+
+  local -a names extra
+  while [[ $# -gt 0 && "$1" != -* ]]; do
+    names+=("$1")
+    shift
+  done
+  extra=("$@")
+
+  for ns in "${names[@]}"; do
+    echo "===== $ns ====="
+    kubectl get all -n "$ns" "${extra[@]}"
+    echo
+  done
 }
 
 # smart fuzzy switch (uses fzf if installed)
@@ -24,10 +29,11 @@ kctx() {
     [[ -n "$ctx" ]] && kubectl config use-context "$ctx"
   else
     echo "fzf not installed; falling back to numbered selection."
-    local contexts=($(kubectl config get-contexts -o name))
-    local i=1
+    local -a contexts
+    contexts=(${(f)"$(kubectl config get-contexts -o name)"})
+    local i=1 choice
     for c in "${contexts[@]}"; do printf "%2d) %s\n" "$i" "$c"; ((i++)); done
-    read -r choice\?"Select context: "
+    read -r "choice?Select context: "
     [[ "$choice" =~ ^[0-9]+$ ]] && kubectl config use-context "${contexts[choice]}"
   fi
 }
