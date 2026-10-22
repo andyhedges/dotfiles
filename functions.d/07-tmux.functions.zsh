@@ -98,56 +98,41 @@ EOF
     fi
 }
 
-mssh() {
-    # Open parallel SSH sessions to multiple hosts in a tiled tmux window/session.
-    if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
-        cat >&2 <<'EOF'
-usage: mssh <host1> <host2> <host3> ...
+_mssh_cmd () {
+    print -r -- "ssh -- ${(q)1}; echo; echo \"[ssh to ${(q)1} exited \$?] press enter to close\"; read _"
+}
 
-Open parallel SSH sessions to multiple hosts in a tiled tmux window/session.
-EOF
-        return 1
-    fi
-    if [[ $# -lt 1 ]]; then
-        echo "usage: mssh <host1> <host2> <host3> ..." >&2
+mssh () {
+    if [[ $# -eq 0 || $1 == -h || $1 == --help ]]; then
+        echo "usage: mssh <host1> <host2> ..." >&2
         return 1
     fi
 
-    local hosts=("$@")
-    local window_id session_name i host_q
+    local session_name pane host
 
-    if [[ -n "$TMUX" ]]; then
-        # You are already in tmux
-        # Create a brand new window that runs ssh to the first host
-        host_q=$(_tmux_shell_quote "${hosts[1]}")
-        window_id=$(tmux new-window -P -F '#{window_id}' -n "mssh" "ssh -- $host_q")
-
-        # For each remaining host, split and start ssh in that pane
-        for ((i=2; i<=${#hosts[@]}; i++)); do
-            host_q=$(_tmux_shell_quote "${hosts[i]}")
-            tmux split-window  -t "$window_id" -v -P -F '#{pane_id}' "ssh -- $host_q" >/dev/null
-            tmux select-layout -t "$window_id" tiled >/dev/null
-        done
-
-        tmux select-window -t "$window_id"
-        tmux select-layout -t "$window_id" tiled >/dev/null
-
-        # Note: panes start unsynchronised. Use prefix Shift+S to broadcast.
+    if [[ -n $TMUX ]]; then
+        pane=$(tmux new-window -P -F '#{pane_id}' -n mssh "$(_mssh_cmd $1)") || return
     else
-        # You are not in tmux
-        # Create a new detached session where the first pane is already ssh'd in
         session_name="mssh-$$"
-        host_q=$(_tmux_shell_quote "${hosts[1]}")
-        window_id=$(tmux new-session -d -s "$session_name" -P -F '#{window_id}' "ssh -- $host_q")
+        pane=$(tmux new-session -d -s "$session_name" -n mssh -P -F '#{pane_id}' "$(_mssh_cmd $1)") || return
+    fi
+    tmux select-pane -t "$pane" -T "$1"
 
-        # Add panes for the rest
-        for ((i=2; i<=${#hosts[@]}; i++)); do
-            host_q=$(_tmux_shell_quote "${hosts[i]}")
-            tmux split-window  -t "$window_id" -v -P -F '#{pane_id}' "ssh -- $host_q" >/dev/null
-            tmux select-layout -t "$window_id" tiled >/dev/null
-        done
+    for host in "${@:2}"; do
+        local new_pane
+        new_pane=$(tmux split-window -t "$pane" -P -F '#{pane_id}' "$(_mssh_cmd $host)") || break
+        tmux select-pane -t "$new_pane" -T "$host"
+        tmux select-layout -t "$pane" tiled > /dev/null
+    done
 
-        tmux select-layout -t "$window_id" tiled >/dev/null
+    tmux set-window-option -t "$pane" pane-border-status top > /dev/null
+    tmux set-window-option -t "$pane" pane-border-format ' #{pane_title} ' > /dev/null
+    tmux set-window-option -t "$pane" synchronize-panes on > /dev/null
+    tmux select-pane -t "$pane"
+
+    if [[ -n $TMUX ]]; then
+        tmux select-window -t "$pane"
+    else
         tmux attach-session -t "$session_name"
     fi
 }

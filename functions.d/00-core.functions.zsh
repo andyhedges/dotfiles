@@ -8,6 +8,11 @@ NERD_FONTS=(
 
 dotupdate() {
   local repo="$HOME/.dotfiles"
+  local before after reload=1
+  if [[ "${1:-}" == "--no-reload" ]]; then
+    reload=0
+  fi
+
   if [[ ! -d "$repo/.git" ]]; then
     printf '%s\n' "No dotfiles repo at $repo" "Clone it with:" \
       "  git clone https://github.com/andyhedges/dotfiles.git \"$repo\""
@@ -15,8 +20,18 @@ dotupdate() {
   fi
   printf '%s\n' "Updating dotfiles..."
 
+  before=$(command git -C "$repo" rev-parse HEAD 2>/dev/null || true)
   if command git -C "$repo" pull --quiet --ff-only; then
-    printf '%s\n' "Dotfiles up to date."
+    after=$(command git -C "$repo" rev-parse HEAD 2>/dev/null || true)
+    if [[ -n "$before" && -n "$after" && "$before" != "$after" ]]; then
+      printf '%s\n' "Dotfiles updated."
+    else
+      printf '%s\n' "Dotfiles up to date."
+    fi
+    if [[ "$reload" -eq 1 && -n "$before" && -n "$after" && "$before" != "$after" && -o interactive ]]; then
+      printf '%s\n' "Restarting shell to apply updates..."
+      exec zsh -l
+    fi
     return 0
   else
     printf '%s\n' "Update failed. Resolve manually: cd \"$repo\" && git status"
@@ -25,7 +40,7 @@ dotupdate() {
 }
 
 dotrefresh() {
-  dotupdate || true
+  dotupdate --no-reload || true
   install_deps || return
   install_fonts || return
   exec zsh -l 2>/dev/null
