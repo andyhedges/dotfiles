@@ -99,7 +99,7 @@ EOF
 }
 
 _mssh_cmd () {
-    print -r -- "ssh -- ${(q)1}; echo; echo \"[ssh to ${(q)1} exited \$?] press enter to close\"; read _"
+    print -r -- "ssh -- ${(q)1}; rc=\$?; echo; echo \"[ssh to ${(q)1} exited \$rc] press enter to close\"; read _"
 }
 
 mssh () {
